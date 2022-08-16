@@ -120,7 +120,7 @@ class LakeSoulDataSource
   override def getTable(schema: StructType,
                         partitioning: Array[Transform],
                         properties: java.util.Map[String, String]): Table = {
-    logDebug("[Debug][huazeng]org.apache.spark.sql.lakesoul.sources.LakeSoulDataSource.getTable")
+    logInfo("[Debug][huazeng]org.apache.spark.sql.lakesoul.sources.LakeSoulDataSource.getTable")
     val options = new CaseInsensitiveStringMap(properties)
     val path = options.get("path")
     if (path == null) throw LakeSoulErrors.pathNotSpecifiedException
