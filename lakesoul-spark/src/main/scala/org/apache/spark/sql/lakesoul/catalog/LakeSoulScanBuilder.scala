@@ -95,6 +95,7 @@ case class LakeSoulScanBuilder(sparkSession: SparkSession,
   }
 
   override def build(): Scan = {
+    logDebug("[Debug][huazeng]building Scan")
     //check and redo commit before read
     //MetaCommit.checkAndRedoCommit(fileIndex.snapshotManagement.snapshot)
 
@@ -136,6 +137,7 @@ case class LakeSoulScanBuilder(sparkSession: SparkSession,
 
 
   def parquetScan(): Scan = {
+    logDebug("[Debug][huazeng]using parquetScan")
     ParquetScan(sparkSession, hadoopConf, fileIndex, dataSchema, readDataSchema(),
       readPartitionSchema(), pushedParquetFilters, options, Seq(parseFilter()))
   }
