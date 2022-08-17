@@ -87,7 +87,6 @@ object LakeSoulUtils extends PredicateHelper {
   }
 
   def findTableRootPath(spark: SparkSession, path: Path): Option[Path] = {
-    logInfo("[Debug]log something")
     var current_path = path
     while (current_path != null) {
       if (LakeSoulSourceUtils.isLakeSoulTableExists(current_path.toString)) {

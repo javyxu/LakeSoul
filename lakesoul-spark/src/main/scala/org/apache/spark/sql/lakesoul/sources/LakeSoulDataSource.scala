@@ -88,7 +88,6 @@ class LakeSoulDataSource
                               mode: SaveMode,
                               parameters: Map[String, String],
                               data: DataFrame): BaseRelation = {
-    logInfo("[Debug][huazeng]log something")
     val path = parameters.getOrElse("path", {
       throw LakeSoulErrors.pathNotSpecifiedException
     })
@@ -106,7 +105,6 @@ class LakeSoulDataSource
 
   override def createRelation(sqlContext: SQLContext,
                               parameters: Map[String, String]): BaseRelation = {
-    logInfo("[Debug][huazeng]log something")
     val path = parameters.getOrElse("path", {
       throw LakeSoulErrors.pathNotSpecifiedException
     })
@@ -122,7 +120,6 @@ class LakeSoulDataSource
   override def getTable(schema: StructType,
                         partitioning: Array[Transform],
                         properties: java.util.Map[String, String]): Table = {
-    logInfo("[Debug][huazeng]log something")
     val options = new CaseInsensitiveStringMap(properties)
     val path = options.get("path")
     if (path == null) throw LakeSoulErrors.pathNotSpecifiedException
