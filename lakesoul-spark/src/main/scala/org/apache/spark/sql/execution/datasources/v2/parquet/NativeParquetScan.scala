@@ -72,7 +72,9 @@ case class NativeParquetScan(sparkSession: SparkSession,
   override lazy val newFileIndex: LakeSoulFileIndexV2 = fileIndex
 
   override protected def partitions: Seq[MergeFilePartition] = {
+    logInfo("[Debug][huazeng]on org.apache.spark.sql.execution.datasources.v2.parquet.NativeParquetScan.partitions")
     val selectedPartitions = newFileIndex.listFiles(partitionFilters, dataFilters)
+    logInfo("[Debug][huazeng]" + selectedPartitions.toString())
     val partitionAttributes = newFileIndex.partitionSchema.toAttributes
     val attributeMap = partitionAttributes.map(a => normalizeName(a.name) -> a).toMap
     val readPartitionAttributes = readPartitionSchema.map { readField =>
