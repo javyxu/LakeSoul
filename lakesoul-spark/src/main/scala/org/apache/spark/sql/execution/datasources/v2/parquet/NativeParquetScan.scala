@@ -50,13 +50,15 @@ case class NativeParquetScan(sparkSession: SparkSession,
 
 
   override def createReaderFactory(): PartitionReaderFactory = {
-    logInfo("[Debug][huazeng]on org.apache.spark.sql.execution.datasources.v2.parquet.NativeParquetScan.createReaderFactory")
+    logInfo("[Debug][huazeng]on createReaderFactory")
     val broadcastedConf = sparkSession.sparkContext.broadcast(
       new SerializableConfiguration(hadoopConf))
 
 
-    NativeParquetPartitionReaderFactory(sparkSession.sessionState.conf, broadcastedConf,
+    val factory = NativeParquetPartitionReaderFactory(sparkSession.sessionState.conf, broadcastedConf,
       dataSchema, readDataSchema, readPartitionSchema, pushedFilters)
+    logInfo("[Debug][huazeng]on createReaderFactory, create success" + factory)
+    factory
   }
 
   private val isCaseSensitive = sparkSession.sessionState.conf.caseSensitiveAnalysis
