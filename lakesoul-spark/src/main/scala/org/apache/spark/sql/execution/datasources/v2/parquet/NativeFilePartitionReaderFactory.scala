@@ -19,7 +19,7 @@ abstract class NativeFilePartitionReaderFactory extends PartitionReaderFactory w
       assert(files.forall(_.isInstanceOf[MergePartitionedFile]))
       files -> buildColumnarReader(files)
     }.toSeq
-    logInfo("[Debug][huazeng]on createReader " + iter.toString)
+    logInfo("[Debug][huazeng]on createReader " + iter.toString())
     val reader = new NativeFilePartitionReader[InternalRow](iter)
     reader
   }
@@ -30,6 +30,7 @@ abstract class NativeFilePartitionReaderFactory extends PartitionReaderFactory w
   }
 
   def buildColumnarReader(partitionedFile: Array[MergePartitionedFile]): PartitionReader[ColumnarBatch] = {
+    logInfo("[Debug][huazeng]on buildColumnarReader " + partitionedFile.toString)
     throw new UnsupportedOperationException("Cannot create columnar reader.")
   }
 }
