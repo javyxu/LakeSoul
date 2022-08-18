@@ -57,7 +57,7 @@ case class NativeParquetScan(sparkSession: SparkSession,
 
     val factory = NativeParquetPartitionReaderFactory(sparkSession.sessionState.conf, broadcastedConf,
       dataSchema, readDataSchema, readPartitionSchema, pushedFilters)
-    logInfo("[Debug][huazeng]on createReaderFactory, create success" + factory)
+    logInfo("[Debug][huazeng]on createReaderFactory, create success " + factory)
     factory
   }
 

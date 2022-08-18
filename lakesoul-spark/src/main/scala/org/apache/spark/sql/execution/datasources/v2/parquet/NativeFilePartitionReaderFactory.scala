@@ -11,7 +11,7 @@ import org.apache.spark.sql.vectorized.ColumnarBatch
 
 abstract class NativeFilePartitionReaderFactory extends PartitionReaderFactory with Logging{
   override def createReader(partition: InputPartition): PartitionReader[InternalRow] = {
-    logInfo("[Debug][huazeng]on org.apache.spark.sql.execution.datasources.v2.parquet.RangeFilePartitionReaderFactory.createReader")
+    logInfo("[Debug][huazeng]on createReader")
     assert(partition.isInstanceOf[MergeFilePartition])
     val filePartition = partition.asInstanceOf[MergeFilePartition]
 
