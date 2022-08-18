@@ -110,7 +110,6 @@ case class NativeParquetScan(sparkSession: SparkSession,
 
       partition.files.flatMap { file =>
         val filePath = file.getPath
-
         Seq(getPartitionedFile(
           sparkSession,
           file,
@@ -172,6 +171,7 @@ case class NativeParquetScan(sparkSession: SparkSession,
                          requestFilesSchemaMap: Map[String, StructType],
                          requestDataSchema: StructType,
                          requestPartitionFields: Array[String]): MergePartitionedFile = {
+    logInfo("[Debug][huazeng]on org.apache.spark.sql.execution.datasources.v2.parquet.NativeParquetScan.getPartitionedFile")
     val hosts = getBlockHosts(getBlockLocations(file), 0, file.getLen)
 
     val filePathStr = filePath
@@ -189,7 +189,8 @@ case class NativeParquetScan(sparkSession: SparkSession,
     val partitionSchemaInfo = requestPartitionFields.map(m => (m, tableInfo.range_partition_schema(m).dataType))
     val requestDataInfo = requestDataSchema.map(m => (m.name, m.dataType))
 
-    MergePartitionedFile(
+
+    val mergePartitionedFile = MergePartitionedFile(
       partitionValues = partitionValues,
       filePath = filePath.toUri.toString,
       start = 0,
@@ -203,6 +204,8 @@ case class NativeParquetScan(sparkSession: SparkSession,
       rangeVersion = touchedFileInfo.range_version,
       fileBucketId = -1,
       locations = hosts)
+    logInfo("[Debug][huazeng]" + mergePartitionedFile.toString)
+    mergePartitionedFile
   }
 
   private def getBlockLocations(file: FileStatus): Array[BlockLocation] = file match {
