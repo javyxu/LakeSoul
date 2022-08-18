@@ -105,6 +105,7 @@ case class NativeParquetScan(sparkSession: SparkSession,
               .map(c => tableInfo.schema(c))
           ))
         })
+      logInfo("[Debug][huazeng]" + requestFilesSchemaMap.toString())
 
       partition.files.flatMap { file =>
         val filePath = file.getPath
