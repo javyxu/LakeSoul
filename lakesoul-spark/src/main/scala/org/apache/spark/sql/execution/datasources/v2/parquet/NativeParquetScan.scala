@@ -123,6 +123,7 @@ case class NativeParquetScan(sparkSession: SparkSession,
       }.toSeq
       //.sortBy(_.length)(implicitly[Ordering[Long]].reverse)
     }
+    logInfo("[Debug][huazeng]"+splitFiles.toString)
 
     if (splitFiles.length == 1) {
       val path = new Path(splitFiles(0).filePath)
@@ -132,9 +133,10 @@ case class NativeParquetScan(sparkSession: SparkSession,
           s"partition, the reason is: ${getFileUnSplittableReason(path)}")
       }
     }
+    logInfo("[Debug][huazeng]"+splitFiles.toString)
 
     //    MergeFilePartition.getFilePartitions(sparkSession.sessionState.conf, splitFiles, tableInfo.bucket_num)
-    getFilePartitions(sparkSession.sessionState.conf, splitFiles, tableInfo.bucket_num)
+    getFilePartitions(sparkSession.sessionState.conf, splitFiles, 1)
   }
 
   override def getFilePartitions(conf: SQLConf,
