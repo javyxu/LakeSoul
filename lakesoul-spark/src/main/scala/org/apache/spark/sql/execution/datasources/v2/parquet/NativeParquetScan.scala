@@ -149,24 +149,24 @@ case class NativeParquetScan(sparkSession: SparkSession,
       .groupBy(_.fileBucketId)
       .map(f => (f._1, f._2.groupBy(_.rangeKey)))
     logInfo("[Debug][huazeng]on getFilePartitions:" + fileWithBucketId.toString)
+    val bucketId = -1
 
-    Seq.tabulate(bucketNum) { bucketId =>
-      val files = fileWithBucketId.getOrElse(bucketId, Map.empty[String, Seq[MergePartitionedFile]])
-        .map(_._2.toArray).toArray
+    val files = fileWithBucketId.getOrElse(bucketId, Map.empty[String, Seq[MergePartitionedFile]])
+      .map(_._2.toArray).toArray
 
-      var isSingleFile = false
-      for (index <- 0 to files.size - 1) {
-        isSingleFile = files(index).size == 1
-        if (!isSingleFile) {
-          val versionFiles = for (elem <- 0 to files(index).size - 1) yield files(index)(elem).copy(writeVersion = elem)
-          files(index) = versionFiles.toArray
-        }
+    var isSingleFile = false
+    for (index <- 0 to files.size - 1) {
+      isSingleFile = files(index).size == 1
+      if (!isSingleFile) {
+        val versionFiles = for (elem <- 0 to files(index).size - 1) yield files(index)(elem).copy(writeVersion = elem)
+        files(index) = versionFiles.toArray
       }
-      logInfo("[Debug][huazeng]on getFilePartitions:" + files.toString)
-      val partition = MergeFilePartition(bucketId, files, isSingleFile)
-      logInfo("[Debug][huazeng]on getFilePartitions:" + partition.toString)
-      partition
     }
+    logInfo("[Debug][huazeng]on getFilePartitions:" + files.toString)
+    val partition = MergeFilePartition(bucketId, files, isSingleFile)
+    logInfo("[Debug][huazeng]on getFilePartitions:" + partition.toString)
+    Seq(partition)
+
   }
 
 
