@@ -9,7 +9,7 @@ import org.apache.spark.sql.vectorized.ColumnarBatch
 
 case class NativeFilePartitionReader[T](filesInfo: Seq[(Array[MergePartitionedFile], PartitionReader[ColumnarBatch])])
   extends PartitionReader[InternalRow] with Logging {
-  logInfo("[Debug][huazeng]on initialize")
+  logInfo("[Debug][huazeng]on initialize "+filesInfo.toString())
 
   val partitionedFilesItr: Iterator[(Array[MergePartitionedFile], PartitionReader[ColumnarBatch])] = filesInfo.iterator
   var nativeMergeLogic:NativeMergeLogic = _
