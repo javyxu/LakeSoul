@@ -19,7 +19,8 @@ abstract class NativeFilePartitionReaderFactory extends PartitionReaderFactory w
       assert(files.forall(_.isInstanceOf[MergePartitionedFile]))
       files -> buildColumnarReader(files)
     }.toSeq
-    new NativeFilePartitionReader[InternalRow](iter)
+    val reader = new NativeFilePartitionReader[InternalRow](iter)
+    reader
   }
 
   override def createColumnarReader(partition: InputPartition): PartitionReader[ColumnarBatch] = {
