@@ -144,10 +144,11 @@ case class NativeParquetScan(sparkSession: SparkSession,
   override def getFilePartitions(conf: SQLConf,
                                  partitionedFiles: Seq[MergePartitionedFile],
                                  bucketNum: Int): Seq[MergeFilePartition] = {
-    logInfo("[Debug][huazeng]on getFilePartitions")
+    logInfo("[Debug][huazeng]on getFilePartitions:")
     val fileWithBucketId: Map[Int, Map[String, Seq[MergePartitionedFile]]] = partitionedFiles
       .groupBy(_.fileBucketId)
       .map(f => (f._1, f._2.groupBy(_.rangeKey)))
+    logInfo("[Debug][huazeng]on getFilePartitions:" + fileWithBucketId.toString)
 
     Seq.tabulate(bucketNum) { bucketId =>
       val files = fileWithBucketId.getOrElse(bucketId, Map.empty[String, Seq[MergePartitionedFile]])
@@ -161,8 +162,9 @@ case class NativeParquetScan(sparkSession: SparkSession,
           files(index) = versionFiles.toArray
         }
       }
+      logInfo("[Debug][huazeng]on getFilePartitions:" + files.toString)
       val partition = MergeFilePartition(bucketId, files, isSingleFile)
-      logInfo("[Debug][huazeng]on getFilePartitions" + partition.toString)
+      logInfo("[Debug][huazeng]on getFilePartitions:" + partition.toString)
       partition
     }
   }
