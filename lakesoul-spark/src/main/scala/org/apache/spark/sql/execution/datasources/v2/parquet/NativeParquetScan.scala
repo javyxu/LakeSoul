@@ -92,6 +92,7 @@ case class NativeParquetScan(sparkSession: SparkSession,
       } else {
         partition.values
       }
+      logInfo("[Debug][huazeng]" + partitionValues.toString())
 
       // produce requested schema
       val requestedFields = readDataSchema.fieldNames
