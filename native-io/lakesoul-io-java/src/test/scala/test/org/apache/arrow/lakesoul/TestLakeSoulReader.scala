@@ -17,7 +17,7 @@ case class TestLakeSoulReader() extends org.scalatest.funsuite.AnyFunSuite with 
 
         val wrapper = new ArrowCDataWrapper()
         wrapper.initializeConfigBuilder()
-        wrapper.addFile("/Users/ceng/Documents/GitHub/LakeSoul/native-io/lakesoul-io/test/test.snappy.parquet")
+        wrapper.addFile("~/test/parquet/base-0.parquet")
         wrapper.setThreadNum(2)
         wrapper.createReader()
         wrapper.startReader(_=>{})
@@ -53,7 +53,7 @@ case class TestLakeSoulReader() extends org.scalatest.funsuite.AnyFunSuite with 
         val wrapper = new ArrowCDataWrapper()
         wrapper.initializeConfigBuilder()
         //        wrapper.addFile("/Users/ceng/Documents/GitHub/LakeSoul/native-io/lakesoul-io/test/test.snappy.parquet")
-        wrapper.addFile("/Users/ceng/Documents/GitHub/LakeSoul/native-io/lakesoul-io-java/src/test/resources/sample-parquet-files/part-00000-a9e77425-5fb4-456f-ba52-f821123bd193-c000.snappy.parquet")
+        wrapper.addFile("~/test/parquet/base-0.parquet")
         wrapper.setThreadNum(2)
         wrapper.createReader()
         wrapper.startReader(_=>{})
