@@ -112,14 +112,6 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <directory>../target/debug</directory>
-                <includes>
-                    <include>*.dylib</include>
-                </includes>
-            </resource>
-        </resources>
         <extensions>
             <extension>
                 <groupId>kr.motd.maven</groupId>

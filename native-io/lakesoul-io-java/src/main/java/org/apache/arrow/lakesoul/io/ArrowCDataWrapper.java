@@ -7,6 +7,7 @@ import org.apache.arrow.lakesoul.io.jnr.LibLakeSoulIO;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,8 @@ public class ArrowCDataWrapper {
 //        String libName = "/Users/ceng/Documents/GitHub/LakeSoul/native-io/target/debug/liblakesoul_io_c.dylib"; // platform specific name for liblakesoul_io_c
         String libName = null;
         try {
+
+            Arrays.stream(new File(this.getClass().getResource("/").toURI()).list()).forEach(s->{System.out.println(s);});
             libName = new File(this.getClass().getResource("/liblakesoul_io_c.dylib").toURI()).getAbsolutePath();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
