@@ -5,6 +5,9 @@ import jnr.ffi.LibraryOption;
 import jnr.ffi.Pointer;
 import org.apache.arrow.lakesoul.io.jnr.LibLakeSoulIO;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +43,7 @@ public class ArrowCDataWrapper {
 
     public void addFile(String file){
         Pointer ptr = LibLakeSoulIO.buildStringPointer(libLakeSoulIO, file);
-        readerConfigBuilder = libLakeSoulIO.lakesoul_config_builder_add_single_file_(readerConfigBuilder, ptr);
+        readerConfigBuilder = libLakeSoulIO.lakesoul_config_builder_add_single_file(readerConfigBuilder, ptr);
     }
 
     public void setThreadNum(int threadNum){

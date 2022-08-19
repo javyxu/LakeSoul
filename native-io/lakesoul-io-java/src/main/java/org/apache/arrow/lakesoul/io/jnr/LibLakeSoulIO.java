@@ -29,7 +29,7 @@ public interface LibLakeSoulIO {
 
     Pointer new_lakesoul_reader_config_builder();
 
-    Pointer lakesoul_config_builder_add_single_file_(Pointer builder, Pointer file);
+    Pointer lakesoul_config_builder_add_single_file(Pointer builder, Pointer file);
 
     Pointer lakesoul_config_builder_add_file(Pointer builder, Pointer files, int file_num);
 
