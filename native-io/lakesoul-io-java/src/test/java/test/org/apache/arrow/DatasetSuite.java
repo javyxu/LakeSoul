@@ -98,59 +98,59 @@ public class DatasetSuite {
 
     }
 
-    @Test
-    public void QueryDataContentForFile() {
-        String uri = "file:///Users/ceng/Documents/GitHub/LakeSoul/arrow/src/test/resources/sample-parquet-files/part-00000-a9e77425-5fb4-456f-ba52-f821123bd193-c000.snappy.parquet";
-        ScanOptions options = new ScanOptions(/*batchSize*/ 100);
-        try (
-                BufferAllocator allocator = new RootAllocator();
-                DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
-                Dataset dataset = datasetFactory.finish();
-                Scanner scanner = dataset.newScan(options)
-        ) {
-            scanner.scan().forEach(scanTask -> {
-                try (ArrowReader reader = scanTask.execute()) {
-                    while (reader.loadNextBatch()) {
-                        try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
-                            System.out.print(root.contentToTSVString());
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    @Test
-    public void QueryDataContentForDirectory() {
-        String uri = "file:///Users/ceng/Documents/GitHub/LakeSoul/arrow/src/test/resources/sample-parquet-files/";
-        ScanOptions options = new ScanOptions(/*batchSize*/ 100);
-        try (BufferAllocator allocator = new RootAllocator();
-             DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
-             Dataset dataset = datasetFactory.finish();
-             Scanner scanner = dataset.newScan(options)
-        ) {
-            scanner.scan().forEach(scanTask-> {
-                final int[] count = {1};
-                try (ArrowReader reader = scanTask.execute()) {
-                    while (reader.loadNextBatch()) {
-                        try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
-                            System.out.println("Batch: " + count[0]++ + ", RowCount: " + root.getRowCount());
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    @Test
+//    public void QueryDataContentForFile() {
+//        String uri = "file:///Users/ceng/Documents/GitHub/LakeSoul/arrow/src/test/resources/sample-parquet-files/part-00000-a9e77425-5fb4-456f-ba52-f821123bd193-c000.snappy.parquet";
+//        ScanOptions options = new ScanOptions(/*batchSize*/ 100);
+//        try (
+//                BufferAllocator allocator = new RootAllocator();
+//                DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+//                Dataset dataset = datasetFactory.finish();
+//                Scanner scanner = dataset.newScan(options)
+//        ) {
+//            scanner.scan().forEach(scanTask -> {
+//                try (ArrowReader reader = scanTask.execute()) {
+//                    while (reader.loadNextBatch()) {
+//                        try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+//                            System.out.print(root.contentToTSVString());
+//                        }
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//
+//    @Test
+//    public void QueryDataContentForDirectory() {
+//        String uri = "file:///Users/ceng/Documents/GitHub/LakeSoul/arrow/src/test/resources/sample-parquet-files/";
+//        ScanOptions options = new ScanOptions(/*batchSize*/ 100);
+//        try (BufferAllocator allocator = new RootAllocator();
+//             DatasetFactory datasetFactory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
+//             Dataset dataset = datasetFactory.finish();
+//             Scanner scanner = dataset.newScan(options)
+//        ) {
+//            scanner.scan().forEach(scanTask-> {
+//                final int[] count = {1};
+//                try (ArrowReader reader = scanTask.execute()) {
+//                    while (reader.loadNextBatch()) {
+//                        try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+//                            System.out.println("Batch: " + count[0]++ + ", RowCount: " + root.getRowCount());
+//                        }
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
     @Test
