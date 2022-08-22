@@ -16,11 +16,12 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.vectorized.ArrowUtils;
 import org.apache.spark.sql.vectorized.ColumnVector;
 import org.apache.spark.sql.vectorized.ColumnarBatch;
+import scala.Function0;
 
 import java.io.Closeable;
 import java.io.IOException;
 
-public class NativeVectorizedReader implements AutoCloseable, Logging {
+public class NativeVectorizedReader implements AutoCloseable {
 
   // The capacity of vectorized batch.
   private int capacity;
@@ -67,7 +68,7 @@ public class NativeVectorizedReader implements AutoCloseable, Logging {
           MemoryMode memMode,
           StructType partitionColumns,
           InternalRow partitionValues) {
-    logInfo("[Debug][huazeng]on initializePartitionColumns");
+    System.out.println("[Debug][huazeng]on initializePartitionColumns");
     StructType partitionSchema = new StructType();
     if (partitionColumns != null) {
       for (StructField f : partitionColumns.fields()) {
@@ -85,7 +86,7 @@ public class NativeVectorizedReader implements AutoCloseable, Logging {
         partitionColumnVectors[i].setIsConstant();
       }
     }
-    logInfo("[Debug][huazeng]on initializePartitionColumns: partitionColumnVectors.length" + String(partitionColumnVectors.length));
+    System.out.println("[Debug][huazeng]on initializePartitionColumns: partitionColumnVectors.length=" + partitionColumnVectors.length);
   }
 
   private ColumnVector[] concatBatchVectorWithPartitionVectors(ColumnVector[] batchVectors){
