@@ -88,6 +88,7 @@ public class NativeVectorizedReader implements AutoCloseable {
       }
     }
     System.out.println("[Debug][huazeng]on initializePartitionColumns: partitionColumnVectors.length=" + partitionColumnVectors.length);
+    System.out.println(partitionColumnVectors.toString());
   }
 
   private ColumnVector[] concatBatchVectorWithPartitionVectors(ColumnVector[] batchVectors){
@@ -95,7 +96,7 @@ public class NativeVectorizedReader implements AutoCloseable {
     System.arraycopy(batchVectors, 0, descColumnVectors, 0, batchVectors.length);
     System.arraycopy(partitionColumnVectors, 0, descColumnVectors, partitionColumnVectors.length, partitionColumnVectors.length);
     System.out.println("[Debug][huazeng]on concatBatchVectorWithPartitionVectors");
-    System.out.println(descColumnVectors);
+    System.out.println(descColumnVectors.length);
     return descColumnVectors;
   }
 
