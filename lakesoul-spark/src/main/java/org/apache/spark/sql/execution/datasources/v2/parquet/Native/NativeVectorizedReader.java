@@ -3,6 +3,7 @@ package org.apache.spark.sql.execution.datasources.v2.parquet.Native;
 import org.apache.arrow.lakesoul.io.ArrowCDataWrapper;
 import org.apache.arrow.lakesoul.io.read.LakeSoulArrowReader;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.spark.internal.Logging;
 import org.apache.spark.memory.MemoryMode;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.execution.datasources.v2.merge.MergePartitionedFile;
@@ -19,7 +20,7 @@ import org.apache.spark.sql.vectorized.ColumnarBatch;
 import java.io.Closeable;
 import java.io.IOException;
 
-public class NativeVectorizedReader implements AutoCloseable{
+public class NativeVectorizedReader implements AutoCloseable, Logging {
 
   // The capacity of vectorized batch.
   private int capacity;
@@ -66,6 +67,7 @@ public class NativeVectorizedReader implements AutoCloseable{
           MemoryMode memMode,
           StructType partitionColumns,
           InternalRow partitionValues) {
+    logInfo("[Debug][huazeng]on initializePartitionColumns");
     StructType partitionSchema = new StructType();
     if (partitionColumns != null) {
       for (StructField f : partitionColumns.fields()) {
@@ -83,6 +85,7 @@ public class NativeVectorizedReader implements AutoCloseable{
         partitionColumnVectors[i].setIsConstant();
       }
     }
+    logInfo("[Debug][huazeng]on initializePartitionColumns: partitionColumnVectors.length" + String(partitionColumnVectors.length));
   }
 
   private ColumnVector[] concatBatchVectorWithPartitionVectors(ColumnVector[] batchVectors){
