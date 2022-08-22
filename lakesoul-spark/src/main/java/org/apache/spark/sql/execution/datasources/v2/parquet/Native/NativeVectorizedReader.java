@@ -69,6 +69,7 @@ public class NativeVectorizedReader implements AutoCloseable {
           StructType partitionColumns,
           InternalRow partitionValues) {
     System.out.println("[Debug][huazeng]on initializePartitionColumns");
+    System.out.println("[Debug][huazeng]on initializePartitionColumns, partitionValues:"+partitionValues.toString());
     StructType partitionSchema = new StructType();
     if (partitionColumns != null) {
       for (StructField f : partitionColumns.fields()) {
