@@ -83,7 +83,7 @@ public class NativeVectorizedReader implements AutoCloseable {
     }
     if (partitionColumns != null) {
       for (int i = 0; i < partitionColumns.fields().length; i++) {
-        ColumnVectorUtils.populate(partitionColumnVectors[i], partitionValues, i);
+        ColumnVectorUtils.populate(partitionColumnVectors[i], partitionValues, 0);
         partitionColumnVectors[i].setIsConstant();
       }
     }
