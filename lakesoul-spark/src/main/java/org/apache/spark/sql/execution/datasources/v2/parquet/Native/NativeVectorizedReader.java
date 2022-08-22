@@ -94,6 +94,8 @@ public class NativeVectorizedReader implements AutoCloseable {
     ColumnVector[] descColumnVectors = new ColumnVector[batchVectors.length + partitionColumnVectors.length];
     System.arraycopy(batchVectors, 0, descColumnVectors, 0, batchVectors.length);
     System.arraycopy(partitionColumnVectors, 0, descColumnVectors, partitionColumnVectors.length, partitionColumnVectors.length);
+    System.out.println("[Debug][huazeng]on concatBatchVectorWithPartitionVectors");
+    System.out.println(descColumnVectors);
     return descColumnVectors;
   }
 
