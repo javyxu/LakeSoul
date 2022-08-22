@@ -43,7 +43,7 @@ public class NativeVectorizedReader implements AutoCloseable{
     wrapper.startReader(bool -> {});
     reader = new LakeSoulArrowReader(wrapper);
 
-    MEMORY_MODE = MemoryMode.OFF_HEAP;
+    MEMORY_MODE = MemoryMode.ON_HEAP;
     initializePartitionColumns(MEMORY_MODE, partitionSchema, files[0].partitionValues());
     this.capacity = capacity;
   }
