@@ -24,17 +24,17 @@ import org.apache.spark.util.SerializableConfiguration
 
 import java.util.{Locale, OptionalLong}
 
-case class NativeParquetScan(sparkSession: SparkSession,
-                             hadoopConf: Configuration,
-                             fileIndex: LakeSoulFileIndexV2,
-                             dataSchema: StructType,
-                             readDataSchema: StructType,
-                             readPartitionSchema: StructType,
-                             pushedFilters: Array[Filter],
-                             options: CaseInsensitiveStringMap,
-                             tableInfo: TableInfo,
-                             partitionFilters: Seq[Expression] = Seq.empty,
-                             dataFilters: Seq[Expression] = Seq.empty
+case class NativeMergeParquetScan(sparkSession: SparkSession,
+                                  hadoopConf: Configuration,
+                                  fileIndex: LakeSoulFileIndexV2,
+                                  dataSchema: StructType,
+                                  readDataSchema: StructType,
+                                  readPartitionSchema: StructType,
+                                  pushedFilters: Array[Filter],
+                                  options: CaseInsensitiveStringMap,
+                                  tableInfo: TableInfo,
+                                  partitionFilters: Seq[Expression] = Seq.empty,
+                                  dataFilters: Seq[Expression] = Seq.empty
                               )
   extends MergeDeltaParquetScan(sparkSession,
     hadoopConf,
