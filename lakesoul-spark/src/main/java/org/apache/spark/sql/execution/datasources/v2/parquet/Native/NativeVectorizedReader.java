@@ -6,6 +6,8 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.spark.internal.Logging;
 import org.apache.spark.memory.MemoryMode;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.execution.datasources.FilePartition;
+import org.apache.spark.sql.execution.datasources.PartitionedFile;
 import org.apache.spark.sql.execution.datasources.v2.merge.MergePartitionedFile;
 import org.apache.spark.sql.execution.vectorized.ColumnVectorUtils;
 import org.apache.spark.sql.execution.vectorized.OffHeapColumnVector;
@@ -35,10 +37,10 @@ public class NativeVectorizedReader implements AutoCloseable {
    */
   private final MemoryMode MEMORY_MODE;
 
-  public NativeVectorizedReader(MergePartitionedFile[] files, StructType partitionSchema, int capacity){
+  public NativeVectorizedReader(PartitionedFile file, StructType partitionSchema, int capacity){
     wrapper=new ArrowCDataWrapper();
     wrapper.initializeConfigBuilder();
-    wrapper.addFile(files[0].filePath());
+    wrapper.addFile(file.filePath());
 
     wrapper.setThreadNum(2);
     wrapper.createReader();
@@ -46,7 +48,7 @@ public class NativeVectorizedReader implements AutoCloseable {
     reader = new LakeSoulArrowReader(wrapper);
 
     MEMORY_MODE = MemoryMode.ON_HEAP;
-    initializePartitionColumns(MEMORY_MODE, partitionSchema, files[0].partitionValues());
+    initializePartitionColumns(MEMORY_MODE, partitionSchema, file.partitionValues());
     this.capacity = capacity;
   }
 
