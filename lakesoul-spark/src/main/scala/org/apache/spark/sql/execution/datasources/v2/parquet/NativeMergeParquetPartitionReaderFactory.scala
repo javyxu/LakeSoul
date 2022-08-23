@@ -4,7 +4,7 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.read.PartitionReader
 import org.apache.spark.sql.execution.datasources.v2.merge.MergePartitionedFile
-import org.apache.spark.sql.execution.datasources.v2.parquet.Native.{NativeMergeVectorizedReader, NativeVectorizedReader}
+import org.apache.spark.sql.execution.datasources.v2.parquet.Native.NativeMergeVectorizedReader
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType

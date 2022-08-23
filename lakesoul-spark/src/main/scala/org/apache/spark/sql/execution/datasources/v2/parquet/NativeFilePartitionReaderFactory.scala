@@ -28,6 +28,7 @@ abstract class NativeFilePartitionReaderFactory extends PartitionReaderFactory w
   override def supportColumnarReads(partition: InputPartition): Boolean = true
 
   override def createColumnarReader(partition: InputPartition): PartitionReader[ColumnarBatch] = {
+    logInfo("[Debug][huazeng]on createColumnarReader " + partition.toString)
     assert(partition.isInstanceOf[FilePartition])
     val filePartition = partition.asInstanceOf[FilePartition]
     val iter = filePartition.files.toIterator.map { file =>
