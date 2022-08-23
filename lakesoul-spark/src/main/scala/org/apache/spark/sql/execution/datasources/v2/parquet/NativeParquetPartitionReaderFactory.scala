@@ -86,7 +86,7 @@ case class NativeParquetPartitionReaderFactory(sqlConf: SQLConf,
   private def buildReaderBase[T](
                                   file: PartitionedFile,
                                   buildReaderFunc: (
-                                    ParquetInputSplit, InternalRow, TaskAttemptContextImpl,
+                                    ParquetInputSplit, PartitionedFile, TaskAttemptContextImpl,
                                       Option[FilterPredicate], Option[ZoneId],
                                       LegacyBehaviorPolicy.Value,
                                       LegacyBehaviorPolicy.Value) => RecordReader[Void, T]): RecordReader[Void, T] = {
@@ -149,19 +149,20 @@ case class NativeParquetPartitionReaderFactory(sqlConf: SQLConf,
       SQLConf.get.getConf(SQLConf.LEGACY_PARQUET_INT96_REBASE_MODE_IN_READ))
     val reader = buildReaderFunc(
       split,
-      file.partitionValues,
+      file,
       hadoopAttemptContext,
       pushed,
       convertTz,
       datetimeRebaseMode,
-      int96RebaseMode)
+      int96RebaseMode,
+    )
     reader.initialize(split, hadoopAttemptContext)
     reader
   }
 
   private def createParquetVectorizedReader(
                                              split: ParquetInputSplit,
-                                             partitionValues: InternalRow,
+                                             file: PartitionedFile,
                                              hadoopAttemptContext: TaskAttemptContextImpl,
                                              pushed: Option[FilterPredicate],
                                              convertTz: Option[ZoneId],
@@ -173,11 +174,13 @@ case class NativeParquetPartitionReaderFactory(sqlConf: SQLConf,
       datetimeRebaseMode.toString,
       int96RebaseMode.toString,
       enableOffHeapColumnVector && taskContext.isDefined,
-      capacity)
+      capacity,
+      file
+    )
     val iter = new RecordReaderIterator(vectorizedReader)
     // SPARK-23457 Register a task completion listener before `initialization`.
     taskContext.foreach(_.addTaskCompletionListener[Unit](_ => iter.close()))
-    logDebug(s"Appending $partitionSchema $partitionValues")
+    logDebug(s"Appending $partitionSchema ${file.partitionValues}")
     vectorizedReader
   }
 }

@@ -2,42 +2,27 @@ package org.apache.spark.sql.execution.datasources.parquet;
 
 import org.apache.arrow.lakesoul.io.ArrowCDataWrapper;
 import org.apache.arrow.lakesoul.io.read.LakeSoulArrowReader;
-import org.apache.arrow.vector.VectorSchemaRoot;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.column.page.PageReadStore;
-import org.apache.parquet.hadoop.metadata.BlockMetaData;
-import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
-import org.apache.spark.internal.Logging;
 import org.apache.spark.memory.MemoryMode;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.execution.datasources.FilePartition;
 import org.apache.spark.sql.execution.datasources.PartitionedFile;
-import org.apache.spark.sql.execution.datasources.parquet.SpecificParquetRecordReaderBase;
-import org.apache.spark.sql.execution.datasources.parquet.VectorizedColumnReader;
-import org.apache.spark.sql.execution.datasources.v2.merge.MergePartitionedFile;
 import org.apache.spark.sql.execution.vectorized.ColumnVectorUtils;
 import org.apache.spark.sql.execution.vectorized.OffHeapColumnVector;
 import org.apache.spark.sql.execution.vectorized.OnHeapColumnVector;
 import org.apache.spark.sql.execution.vectorized.WritableColumnVector;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-import org.apache.spark.sql.vectorized.ArrowUtils;
-import org.apache.spark.sql.vectorized.ColumnVector;
 import org.apache.spark.sql.vectorized.ColumnarBatch;
-import scala.Function0;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.apache.parquet.format.converter.ParquetMetadataConverter.range;
 import static org.apache.parquet.hadoop.ParquetFileReader.readFooter;
 
 /**
@@ -52,7 +37,6 @@ import static org.apache.parquet.hadoop.ParquetFileReader.readFooter;
  * TODO: make this always return ColumnarBatches.
  */
 public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Object> {
-
   // The capacity of vectorized batch.
   private int capacity;
 
@@ -133,18 +117,26 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
           String datetimeRebaseMode,
           String int96RebaseMode,
           boolean useOffHeap,
-          int capacity) {
+          int capacity,
+          PartitionedFile file) {
     this.convertTz = convertTz;
     this.datetimeRebaseMode = datetimeRebaseMode;
     this.int96RebaseMode = int96RebaseMode;
     MEMORY_MODE = useOffHeap ? MemoryMode.OFF_HEAP : MemoryMode.ON_HEAP;
     this.capacity = capacity;
+
+
+    // initalizing native reader
+    wrapper=new ArrowCDataWrapper();
+    wrapper.initializeConfigBuilder();
+    wrapper.addFile(file.filePath());
+
+    wrapper.setThreadNum(2);
+    wrapper.createReader();
+    wrapper.startReader(bool -> {});
+    nativeReader = new LakeSoulArrowReader(wrapper);
   }
 
-  // For test only.
-  public NativeVectorizedReader(boolean useOffHeap, int capacity) {
-    this(null, "CORRECTED", "LEGACY", useOffHeap, capacity);
-  }
 
   /**
    * Implementation of RecordReader API.
@@ -342,14 +334,13 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     }
     totalCountLoadedSoFar += pages.getRowCount();
   }
+
+  private ArrowCDataWrapper wrapper;
+  private LakeSoulArrowReader nativeReader;
 }
 
 
 //public class NativeVectorizedReader implements AutoCloseable {
-//  protected Path file;
-//  protected MessageType fileSchema;
-//  protected MessageType requestedSchema;
-//  protected StructType sparkSchema;
 //
 //  // The capacity of vectorized batch.
 //  private int capacity;
