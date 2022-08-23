@@ -28,7 +28,7 @@ case class NativeMergeParquetPartitionReaderFactory(sqlConf: SQLConf,
                                                     readDataSchema: StructType,
                                                     partitionSchema: StructType,
                                                     filters: Array[Filter])
-  extends NativeFilePartitionReaderFactory with Logging{
+  extends NativeMergeFilePartitionReaderFactory with Logging{
 
   private val enableOffHeapColumnVector = sqlConf.offHeapColumnVectorEnabled
   private val capacity = sqlConf.parquetVectorizedReaderBatchSize

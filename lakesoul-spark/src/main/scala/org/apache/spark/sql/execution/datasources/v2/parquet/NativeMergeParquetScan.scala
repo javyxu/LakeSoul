@@ -55,7 +55,7 @@ case class NativeMergeParquetScan(sparkSession: SparkSession,
       new SerializableConfiguration(hadoopConf))
 
 
-    val factory = NativeParquetPartitionReaderFactory(sparkSession.sessionState.conf, broadcastedConf,
+    val factory = NativeMergeParquetPartitionReaderFactory(sparkSession.sessionState.conf, broadcastedConf,
       dataSchema, readDataSchema, readPartitionSchema, pushedFilters)
     logInfo("[Debug][huazeng]on createReaderFactory, create success " + factory)
     factory
