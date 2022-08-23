@@ -34,7 +34,9 @@ case class NativeParquetPartitionReaderFactory(sqlConf: SQLConf,
   extends NativeFilePartitionReaderFactory with Logging{
   override def buildReader(partitionedFile: PartitionedFile): PartitionReader[InternalRow] = ???
 
-  def createVectorizedReader(file: PartitionedFile):NativeVectorizedReader = ???
+  def createVectorizedReader(file: PartitionedFile):NativeVectorizedReader = {
+    new NativeVectorizedReader(file, partitionSchema, 200)
+  }
 
   override def buildColumnarReader(file: PartitionedFile): PartitionReader[ColumnarBatch] = {
     val vectorizedReader = createVectorizedReader(file)
