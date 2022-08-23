@@ -229,7 +229,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
       }
     }
     System.out.println("[Debug][huazeng]on initializePartitionColumns: partitionColumnVectors.length=" + partitionColumnVectors.length);
-    System.out.println(partitionColumnVectors[0]);
+//    System.out.println(partitionColumnVectors[0]);
   }
 
   private void initBatch() {
@@ -246,7 +246,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
    * before any calls to nextKeyValue/nextBatch.
    */
   public ColumnarBatch resultBatch() {
-    if (columnarBatch == null) initBatch();
+//    if (columnarBatch == null) initBatch();
     return columnarBatch;
   }
 
