@@ -62,9 +62,9 @@ case class NativeParquetPartitionReaderFactory(sqlConf: SQLConf,
 
   override def buildReader(partitionedFile: PartitionedFile): PartitionReader[InternalRow] = ???
 
-  def createVectorizedReader(file: PartitionedFile):VectorizedParquetRecordReader = {
+  def createVectorizedReader(file: PartitionedFile):NativeVectorizedReader = {
     val vectorizedReader = buildReaderBase(file, createParquetVectorizedReader)
-      .asInstanceOf[VectorizedParquetRecordReader]
+      .asInstanceOf[NativeVectorizedReader]
     vectorizedReader.initBatch(partitionSchema, file.partitionValues)
     vectorizedReader
   }
