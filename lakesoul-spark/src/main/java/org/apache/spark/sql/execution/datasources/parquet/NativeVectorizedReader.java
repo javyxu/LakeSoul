@@ -160,6 +160,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
       columnarBatch.close();
       columnarBatch = null;
     }
+    wrapper.free_lakesoul_reader();
     super.close();
   }
 
