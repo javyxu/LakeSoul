@@ -213,7 +213,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     if (partitionColumns != null) {
       for (int i = 0; i < partitionColumns.fields().length; i++) {
         System.out.println("[Debug][huazeng]on initBatch: partitionColumnVectors.length=" + partitionColumnVectors.length);
-        ColumnVectorUtils.populate(partitionColumnVectors[i], partitionValues, 0);
+        ColumnVectorUtils.populate(partitionColumnVectors[i], partitionValues, i);
         partitionColumnVectors[i].setIsConstant();
       }
     }
