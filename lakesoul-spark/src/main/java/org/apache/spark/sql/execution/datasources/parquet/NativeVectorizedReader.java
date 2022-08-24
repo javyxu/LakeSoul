@@ -198,7 +198,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
   private void initBatch(
           MemoryMode memMode,
           StructType partitionColumns,
-          InternalRow partitionValues) {
+          InternalRow partitionValues) throws IOException {
     StructType partitionSchema = new StructType();
     if (partitionColumns != null) {
       System.out.println("[Debug][huazeng]on initBatch, partitionValues:"+partitionValues.toString());
@@ -227,11 +227,11 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     }
   }
 
-  private void initBatch() {
+  private void initBatch() throws IOException {
     initBatch(MEMORY_MODE, null, null);
   }
 
-  public void initBatch(StructType partitionColumns, InternalRow partitionValues) {
+  public void initBatch(StructType partitionColumns, InternalRow partitionValues) throws IOException {
     initBatch(MEMORY_MODE, partitionColumns, partitionValues);
   }
 
@@ -240,7 +240,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
    * This object is reused. Calling this enables the vectorized reader. This should be called
    * before any calls to nextKeyValue/nextBatch.
    */
-  public ColumnarBatch resultBatch() {
+  public ColumnarBatch resultBatch() throws IOException {
     if (columnarBatch == null) initBatch();
     return columnarBatch;
   }
