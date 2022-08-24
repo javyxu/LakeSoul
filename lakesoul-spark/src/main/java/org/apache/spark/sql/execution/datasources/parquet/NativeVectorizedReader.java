@@ -128,17 +128,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     this.int96RebaseMode = int96RebaseMode;
     MEMORY_MODE = useOffHeap ? MemoryMode.OFF_HEAP : MemoryMode.ON_HEAP;
     this.capacity = capacity;
-
-
-    // initalizing native reader
-    wrapper = new ArrowCDataWrapper();
-    wrapper.initializeConfigBuilder();
-    wrapper.addFile(file.filePath());
-
-    wrapper.setThreadNum(2);
-    wrapper.createReader();
-    wrapper.startReader(bool -> {});
-    nativeReader = new LakeSoulArrowReader(wrapper);
+    this.file = file;
   }
 
 
@@ -209,12 +199,6 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
           StructType partitionColumns,
           InternalRow partitionValues) {
     StructType partitionSchema = new StructType();
-    // Initialize missing columns with nulls.
-    for (int i = 0; i < missingColumns.length; i++) {
-      if (!missingColumns[i]) {
-        wrapper.addColumn(sparkSchema.fields()[i].name());
-      }
-    }
     if (partitionColumns != null) {
       System.out.println("[Debug][huazeng]on initBatch, partitionValues:"+partitionValues.toString());
       for (StructField f : partitionColumns.fields()) {
@@ -320,6 +304,21 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
         missingColumns[i] = true;
       }
     }
+    // initalizing native reader
+    wrapper = new ArrowCDataWrapper();
+    wrapper.initializeConfigBuilder();
+    wrapper.addFile(file.filePath());
+    // Initialize missing columns with nulls.
+    for (int i = 0; i < missingColumns.length; i++) {
+      if (!missingColumns[i]) {
+        wrapper.addColumn(sparkSchema.fields()[i].name());
+      }
+    }
+
+    wrapper.setThreadNum(2);
+    wrapper.createReader();
+    wrapper.startReader(bool -> {});
+    nativeReader = new LakeSoulArrowReader(wrapper);
   }
 
   private void checkEndOfRowGroup() throws IOException {
@@ -348,6 +347,8 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
   private ArrowCDataWrapper wrapper;
   private LakeSoulArrowReader nativeReader;
   private WritableColumnVector[] partitionColumnVectors;
+
+  private PartitionedFile file;
 }
 
 
