@@ -131,7 +131,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
 
 
     // initalizing native reader
-    wrapper=new ArrowCDataWrapper();
+    wrapper = new ArrowCDataWrapper();
     wrapper.initializeConfigBuilder();
     wrapper.addFile(file.filePath());
 
@@ -208,11 +208,11 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
           MemoryMode memMode,
           StructType partitionColumns,
           InternalRow partitionValues) {
-    StructType batchSchema = new StructType();
     StructType partitionSchema = new StructType();
-    for (StructField f: sparkSchema.fields()) {
+    // Initialize missing columns with nulls.
+    for (int i = 0; i < missingColumns.length; i++) {
       if (!missingColumns[i]) {
-        wrapper.addColumn(f.name());
+        wrapper.addColumn(sparkSchema.fields()[i].name());
       }
     }
     if (partitionColumns != null) {
