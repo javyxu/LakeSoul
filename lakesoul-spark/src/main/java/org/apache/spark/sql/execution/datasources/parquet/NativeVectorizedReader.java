@@ -188,7 +188,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
   @Override
   public Object getCurrentValue() {
     VectorSchemaRoot vsr = nativeReader.nextResultVectorSchemaRoot();
-    return (Object) new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(vsr)), capacity);
+    return  new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(vsr)), capacity);
 //    if (returnColumnarBatch) return columnarBatch;
 //    return columnarBatch.getRow(batchIdx - 1);
   }
@@ -209,10 +209,14 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
           StructType partitionColumns,
           InternalRow partitionValues) {
     StructType batchSchema = new StructType();
-    System.out.println("[Debug][huazeng]on initializePartitionColumns");
-//    System.out.println("[Debug][huazeng]on initializePartitionColumns, partitionValues:"+partitionValues.toString());
     StructType partitionSchema = new StructType();
+    for (StructField f: sparkSchema.fields()) {
+      if (!missingColumns[i]) {
+        wrapper.addColumn(f.name());
+      }
+    }
     if (partitionColumns != null) {
+      System.out.println("[Debug][huazeng]on initBatch, partitionValues:"+partitionValues.toString());
       for (StructField f : partitionColumns.fields()) {
         partitionSchema = partitionSchema.add(f);
       }
@@ -224,12 +228,11 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     }
     if (partitionColumns != null) {
       for (int i = 0; i < partitionColumns.fields().length; i++) {
+        System.out.println("[Debug][huazeng]on initBatch: partitionColumnVectors.length=" + partitionColumnVectors.length);
         ColumnVectorUtils.populate(partitionColumnVectors[i], partitionValues, 0);
         partitionColumnVectors[i].setIsConstant();
       }
     }
-    System.out.println("[Debug][huazeng]on initializePartitionColumns: partitionColumnVectors.length=" + partitionColumnVectors.length);
-//    System.out.println(partitionColumnVectors[0]);
   }
 
   private void initBatch() {
