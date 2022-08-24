@@ -127,6 +127,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     this.datetimeRebaseMode = datetimeRebaseMode;
     this.int96RebaseMode = int96RebaseMode;
     MEMORY_MODE = useOffHeap ? MemoryMode.OFF_HEAP : MemoryMode.ON_HEAP;
+    System.out.println("[Debug][huazeng]on NativeVectorizedReader, capacity:"+capacity);
     this.capacity = capacity;
     this.file = file;
   }
