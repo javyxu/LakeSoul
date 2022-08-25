@@ -267,7 +267,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
 //    checkEndOfRowGroup();
     int num = (int) Math.min((long) capacity, totalRowCount - rowsReturned);
     rowsReturned += num;
-    columnarBatch.setNumRows(num);
+    columnarBatch.setNumRows((int)totalRowCount);
     numBatched = num;
     batchIdx = 0;
     return true;
