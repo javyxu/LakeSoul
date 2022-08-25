@@ -337,7 +337,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     wrapper.setThreadNum(2);
     wrapper.createReader();
     wrapper.startReader(bool -> {});
-    nativeReader = new LakeSoulArrowReader(wrapper);
+    nativeReader = new LakeSoulArrowReader(wrapper, 2000);
   }
 
   private void checkEndOfRowGroup() throws IOException {
