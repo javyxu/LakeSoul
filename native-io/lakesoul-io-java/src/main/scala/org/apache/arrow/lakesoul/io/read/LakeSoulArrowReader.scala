@@ -10,7 +10,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future, Promise}
 
 case class LakeSoulArrowReader(wrapper: ArrowCDataWrapper,
-                              timeout: Int = 1000) extends AutoCloseable{
+                              timeout: Int = 2000) extends AutoCloseable{
   def next() = iterator.next()
 
   def hasNext: Boolean = iterator.hasNext
