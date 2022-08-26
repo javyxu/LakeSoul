@@ -225,9 +225,10 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
       }
     }
     if (nextVectorSchemaRoot == null) {
-      throw new IOException("native reader read nextVectorSchemaRoot failed");
+      System.out.println("nextVectorSchemaRoot not ready");
+    } else {
+      columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(nextVectorSchemaRoot)), nextVectorSchemaRoot.getRowCount());
     }
-    columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(nextVectorSchemaRoot)), nextVectorSchemaRoot.getRowCount());
   }
 
   private void initBatch() throws IOException {
@@ -261,7 +262,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
   public boolean nextBatch() throws IOException {
     if (nativeReader.hasNext()) {
       nextVectorSchemaRoot = nativeReader.nextResultVectorSchemaRoot();
-      if (columnarBatch == null) initBatch();
+      initBatch();
 //      columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(vsr)), vsr.getRowCount());
       return true;
     } else {
