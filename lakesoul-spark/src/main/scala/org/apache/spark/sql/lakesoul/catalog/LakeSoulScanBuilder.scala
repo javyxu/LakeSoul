@@ -124,17 +124,17 @@ case class LakeSoulScanBuilder(sparkSession: SparkSession,
           readPartitionSchema(), pushedParquetFilters, options, tableInfo, Seq(parseFilter()))
     }
     else {
-//      return NativeMergeParquetScan(sparkSession, hadoopConf, fileIndex, dataSchema, readDataSchema(),
-//        readPartitionSchema(), pushedParquetFilters, options, tableInfo, Seq(parseFilter()))
-      if (sparkSession.sessionState.conf
-        .getConf(LakeSoulSQLConf.BUCKET_SCAN_MULTI_PARTITION_ENABLE)) {
-        MultiPartitionMergeBucketScan(sparkSession, hadoopConf, fileIndex, dataSchema, mergeReadDataSchema(),
-          readPartitionSchema(), pushedParquetFilters, options, tableInfo, Seq(parseFilter()))
-      } else
-      {
-        MultiPartitionMergeScan(sparkSession, hadoopConf, fileIndex, dataSchema, mergeReadDataSchema(),
-          readPartitionSchema(), pushedParquetFilters, options, tableInfo, Seq(parseFilter()))
-      }
+      return NativeMergeParquetScan(sparkSession, hadoopConf, fileIndex, dataSchema, readDataSchema(),
+        readPartitionSchema(), pushedParquetFilters, options, tableInfo, Seq(parseFilter()))
+//      if (sparkSession.sessionState.conf
+//        .getConf(LakeSoulSQLConf.BUCKET_SCAN_MULTI_PARTITION_ENABLE)) {
+//        MultiPartitionMergeBucketScan(sparkSession, hadoopConf, fileIndex, dataSchema, mergeReadDataSchema(),
+//          readPartitionSchema(), pushedParquetFilters, options, tableInfo, Seq(parseFilter()))
+//      } else
+//      {
+//        MultiPartitionMergeScan(sparkSession, hadoopConf, fileIndex, dataSchema, mergeReadDataSchema(),
+//          readPartitionSchema(), pushedParquetFilters, options, tableInfo, Seq(parseFilter()))
+//      }
     }
   }
 
