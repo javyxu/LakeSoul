@@ -226,8 +226,9 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     }
     if (nextVectorSchemaRoot == null) {
       System.out.println("nextVectorSchemaRoot not ready");
+    } else {
+      columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(nextVectorSchemaRoot)), nextVectorSchemaRoot.getRowCount());
     }
-    columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(nextVectorSchemaRoot)), nextVectorSchemaRoot.getRowCount());
   }
 
   private void initBatch() throws IOException {
