@@ -205,18 +205,18 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
           MemoryMode memMode,
           StructType partitionColumns,
           InternalRow partitionValues) throws IOException {
-    StructType partitionSchema = new StructType();
+
     System.out.println("[Debug][huazeng]on initBatch, partitionValues: "+partitionValues);
     if (partitionColumns != null) {
-      System.out.println("[Debug][huazeng]on initBatch, partitionValues:"+partitionValues.toString());
+      StructType partitionSchema = new StructType();
       for (StructField f : partitionColumns.fields()) {
         partitionSchema = partitionSchema.add(f);
       }
 
       if (memMode == MemoryMode.OFF_HEAP) {
-        partitionColumnVectors = OffHeapColumnVector.allocateColumns(totalRowCount, partitionSchema);
+        partitionColumnVectors = OffHeapColumnVector.allocateColumns((int)totalRowCount, partitionSchema);
       } else {
-        partitionColumnVectors = OnHeapColumnVector.allocateColumns(totalRowCount, partitionSchema);
+        partitionColumnVectors = OnHeapColumnVector.allocateColumns((int)totalRowCount, partitionSchema);
       }
       for (int i = 0; i < partitionColumns.fields().length; i++) {
         System.out.println("[Debug][huazeng]on initBatch: partitionColumnVectors.length=" + partitionColumnVectors.length);
