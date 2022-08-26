@@ -206,6 +206,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
           StructType partitionColumns,
           InternalRow partitionValues) throws IOException {
     StructType partitionSchema = new StructType();
+    System.out.println("[Debug][huazeng]on initBatch, partitionValues: "+partitionValues);
     if (partitionColumns != null) {
       System.out.println("[Debug][huazeng]on initBatch, partitionValues:"+partitionValues.toString());
       for (StructField f : partitionColumns.fields()) {
