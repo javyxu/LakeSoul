@@ -224,13 +224,6 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
         partitionColumnVectors[i].setIsConstant();
       }
     }
-    if (nativeReader.hasNext()) {
-      VectorSchemaRoot vsr = nativeReader.nextResultVectorSchemaRoot();
-      columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(vsr)), vsr.getRowCount());
-    } else {
-      throw new IOException("expecting more recordbatch but reached last block. Read "
-              + rowsReturned + " out of " + totalRowCount);
-    }
   }
 
   private void initBatch() throws IOException {
@@ -262,29 +255,19 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
    * Advances to the next batch of rows. Returns false if there are no more.
    */
   public boolean nextBatch() throws IOException {
-    columnarBatch.setNumRows(0);
-    if (rowsReturned >= totalRowCount) return false;
-//    checkEndOfRowGroup();
-    int num = (int) Math.min((long) capacity, totalRowCount - rowsReturned);
-    rowsReturned += num;
-    columnarBatch.setNumRows((int)totalRowCount);
-    numBatched = num;
-    batchIdx = 0;
-    return true;
-//    for (WritableColumnVector vector : columnVectors) {
-//      vector.reset();
-//    }
+    if (nativeReader.hasNext()) {
+      VectorSchemaRoot vsr = nativeReader.nextResultVectorSchemaRoot();
+      columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(vsr)), vsr.getRowCount());
+      return true;
+    } else {
+      return false;
+    }
 //    columnarBatch.setNumRows(0);
 //    if (rowsReturned >= totalRowCount) return false;
-//    checkEndOfRowGroup();
-//
-//    int num = (int) Math.min((long) capacity, totalCountLoadedSoFar - rowsReturned);
-//    for (int i = 0; i < columnReaders.length; ++i) {
-//      if (columnReaders[i] == null) continue;
-//      columnReaders[i].readBatch(num, columnVectors[i]);
-//    }
+////    checkEndOfRowGroup();
+//    int num = (int) Math.min((long) capacity, totalRowCount - rowsReturned);
 //    rowsReturned += num;
-//    columnarBatch.setNumRows(num);
+//    columnarBatch.setNumRows((int)totalRowCount);
 //    numBatched = num;
 //    batchIdx = 0;
 //    return true;
