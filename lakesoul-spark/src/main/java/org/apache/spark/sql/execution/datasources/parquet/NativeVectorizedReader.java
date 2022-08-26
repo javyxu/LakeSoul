@@ -182,7 +182,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
 
   @Override
   public Object getCurrentValue() {
-    System.out.println("[Debug][huazeng]on getCurrentValue, rowsReturned:"+rowsReturned + " totalRowCount:" + totalRowCount);
+//    System.out.println("[Debug][huazeng]on getCurrentValue, rowsReturned:"+rowsReturned + " totalRowCount:" + totalRowCount);
     System.out.println("[Debug][huazeng]on getCurrentValue, columnarBatch.numCols():"+columnarBatch.numCols() + "columnarBatch.numRows():"+columnarBatch.numRows());
     if (returnColumnarBatch) return columnarBatch;
     return columnarBatch.getRow(batchIdx - 1);
@@ -212,13 +212,12 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
       for (StructField f : partitionColumns.fields()) {
         partitionSchema = partitionSchema.add(f);
       }
-    }
-    if (memMode == MemoryMode.OFF_HEAP) {
-      partitionColumnVectors = OffHeapColumnVector.allocateColumns(capacity, partitionSchema);
-    } else {
-      partitionColumnVectors = OnHeapColumnVector.allocateColumns(capacity, partitionSchema);
-    }
-    if (partitionColumns != null) {
+
+      if (memMode == MemoryMode.OFF_HEAP) {
+        partitionColumnVectors = OffHeapColumnVector.allocateColumns(capacity, partitionSchema);
+      } else {
+        partitionColumnVectors = OnHeapColumnVector.allocateColumns(capacity, partitionSchema);
+      }
       for (int i = 0; i < partitionColumns.fields().length; i++) {
         System.out.println("[Debug][huazeng]on initBatch: partitionColumnVectors.length=" + partitionColumnVectors.length);
         ColumnVectorUtils.populate(partitionColumnVectors[i], partitionValues, i);
@@ -227,9 +226,8 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     }
     if (nextVectorSchemaRoot == null) {
       System.out.println("nextVectorSchemaRoot not ready");
-    } else {
-      columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(nextVectorSchemaRoot)), nextVectorSchemaRoot.getRowCount());
     }
+    columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(nextVectorSchemaRoot)), nextVectorSchemaRoot.getRowCount());
   }
 
   private void initBatch() throws IOException {
@@ -285,7 +283,7 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
     System.arraycopy(batchVectors, 0, descColumnVectors, 0, batchVectors.length);
     System.arraycopy(partitionColumnVectors, 0, descColumnVectors, batchVectors.length,  partitionColumnVectors.length);
     System.out.println("[Debug][huazeng]on concatBatchVectorWithPartitionVectors");
-//    System.out.println(descColumnVectors[batchVectors.length]);
+    System.out.println(descColumnVectors[batchVectors.length]);
     return descColumnVectors;
   }
 
