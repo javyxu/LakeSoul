@@ -224,7 +224,10 @@ public class NativeVectorizedReader extends SpecificParquetRecordReaderBase<Obje
         partitionColumnVectors[i].setIsConstant();
       }
     }
-    columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(vsr)), vsr.getRowCount());
+    if (nextVectorSchemaRoot == null) {
+      throw new IOException("native reader read nextVectorSchemaRoot failed")
+    }
+    columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(nextVectorSchemaRoot)), nextVectorSchemaRoot.getRowCount());
   }
 
   private void initBatch() throws IOException {
