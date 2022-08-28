@@ -255,11 +255,13 @@ public class NativeMergeVectorizedReader extends SpecificParquetRecordReaderBase
    */
   public boolean nextBatch() throws IOException {
     if (nativeReader.hasNext()) {
+      System.out.println("Debug][huazeng]on nextBatch, nativeReader.hasNext()=true");
       nextVectorSchemaRoot = nativeReader.nextResultVectorSchemaRoot();
       initBatch();
 //      columnarBatch = new ColumnarBatch(concatBatchVectorWithPartitionVectors(ArrowUtils.asArrayColumnVector(vsr)), vsr.getRowCount());
       return true;
     } else {
+      System.out.println("Debug][huazeng]on nextBatch, nativeReader.hasNext()=false");
       return false;
     }
 //    columnarBatch.setNumRows(0);
