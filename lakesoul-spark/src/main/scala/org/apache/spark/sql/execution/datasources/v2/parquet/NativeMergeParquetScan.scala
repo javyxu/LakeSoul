@@ -14,17 +14,19 @@ import org.apache.spark.sql.execution.datasources.PartitioningAwareFileIndex
 import org.apache.spark.sql.execution.datasources.parquet.{ParquetReadSupport, ParquetWriteSupport}
 import org.apache.spark.sql.execution.datasources.v2.FileScan
 import org.apache.spark.sql.execution.datasources.v2.merge.MergePartitionedFileUtil.{getBlockHosts, getBlockLocations, getPartitionedFile}
+import org.apache.spark.sql.execution.datasources.v2.merge.parquet.batch.merge_operator.MergeOperator
 import org.apache.spark.sql.execution.datasources.v2.merge.{FieldInfo, KeyIndex, MergeDeltaParquetScan, MergeFilePartition, MergePartitionedFile, MergePartitionedFileUtil, MultiPartitionMergeScan}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.lakesoul.exception.LakeSoulErrors
-import org.apache.spark.sql.lakesoul.{LakeSoulFileIndexV2, LakeSoulTableForCdc}
+import org.apache.spark.sql.lakesoul.{LakeSoulFileIndexV2, LakeSoulTableForCdc, LakeSoulUtils}
 import org.apache.spark.sql.lakesoul.utils.{DataFileInfo, TableInfo}
 import org.apache.spark.sql.sources.{EqualTo, Filter, Not}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
-import org.apache.spark.util.SerializableConfiguration
+import org.apache.spark.util.{SerializableConfiguration, Utils}
 
 import java.util.{Locale, OptionalLong}
+import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.mutable.ArrayBuffer
 
 case class NativeMergeParquetScan(sparkSession: SparkSession,
@@ -37,8 +39,7 @@ case class NativeMergeParquetScan(sparkSession: SparkSession,
                                   options: CaseInsensitiveStringMap,
                                   tableInfo: TableInfo,
                                   partitionFilters: Seq[Expression] = Seq.empty,
-                                  dataFilters: Seq[Expression] = Seq.empty
-                              )
+                                  dataFilters: Seq[Expression] = Seq.empty)
   extends MergeDeltaParquetScan(sparkSession,
     hadoopConf,
     fileIndex,
@@ -55,10 +56,23 @@ case class NativeMergeParquetScan(sparkSession: SparkSession,
   override def createReaderFactory(): PartitionReaderFactory = {
     logInfo("[Debug][huazeng]on createReaderFactory")
     val readDataSchemaAsJson = readDataSchema.json
+
+    val requestedFields = readDataSchema.fieldNames
+    val requestFilesSchema =
+      fileInfo
+        .groupBy(_.range_version)
+        .map(m => {
+          val fileExistCols = m._2.head.file_exist_cols.split(",")
+          m._1 + "->" + StructType(
+            requestedFields.filter(f => fileExistCols.contains(f) || tableInfo.hash_partition_columns.contains(f))
+              .map(c => tableInfo.schema(c))
+          ).json
+        }).mkString("|")
+
     hadoopConf.set(ParquetInputFormat.READ_SUPPORT_CLASS, classOf[ParquetReadSupport].getName)
     hadoopConf.set(
       ParquetReadSupport.SPARK_ROW_REQUESTED_SCHEMA,
-      readDataSchemaAsJson)
+      requestFilesSchema)
     hadoopConf.set(
       ParquetWriteSupport.SPARK_ROW_SCHEMA,
       readDataSchemaAsJson)
@@ -81,8 +95,38 @@ case class NativeMergeParquetScan(sparkSession: SparkSession,
     hadoopConf.setBoolean(
       SQLConf.PARQUET_INT96_AS_TIMESTAMP.key,
       sparkSession.sessionState.conf.isParquetINT96AsTimestamp)
+
     val broadcastedConf = sparkSession.sparkContext.broadcast(
       new SerializableConfiguration(hadoopConf))
+
+    //get merge operator info
+    val allSchema = (dataSchema ++ readPartitionSchema).map(_.name)
+    val mergeOperatorInfo = options.keySet().asScala
+      .filter(_.startsWith(LakeSoulUtils.MERGE_OP_COL))
+      .map(k => {
+        val realColName = k.replaceFirst(LakeSoulUtils.MERGE_OP_COL, "")
+        assert(allSchema.contains(realColName),
+          s"merge column `$realColName` not found in [${allSchema.mkString(",")}]")
+
+        val mergeClass = Class.forName(options.get(k), true, Utils.getContextOrSparkClassLoader).getConstructors()(0)
+          .newInstance()
+          .asInstanceOf[MergeOperator[Any]]
+        (realColName, mergeClass)
+      }).toMap
+
+    //remove cdc filter from pushedFilters;cdc filter Not(EqualTo("cdccolumn","detete"))
+    var newFilters = pushedFilters
+    if (LakeSoulTableForCdc.isLakeSoulCdcTable(tableInfo)){
+      newFilters=pushedFilters.filter(_ match {
+        case  Not(EqualTo(attribute,value)) if value=="delete" && LakeSoulTableForCdc.isLakeSoulCdcTable(tableInfo)=> false
+        case _=>true
+      })
+    }
+    val defaultMergeOpInfoString = sparkSession.sessionState.conf.getConfString("defaultMergeOpInfo",
+      "org.apache.spark.sql.execution.datasources.v2.merge.parquet.batch.merge_operator.DefaultMergeOp")
+    val defaultMergeOp = Class.forName(defaultMergeOpInfoString, true, Utils.getContextOrSparkClassLoader).getConstructors()(0)
+      .newInstance()
+      .asInstanceOf[MergeOperator[Any]]
 
     NativeMergeParquetPartitionReaderFactory(sparkSession.sessionState.conf, broadcastedConf,
       dataSchema, readDataSchema, readPartitionSchema, pushedFilters)
