@@ -322,7 +322,7 @@ public class NativeMergeVectorizedReader extends SpecificParquetRecordReaderBase
       }
     }
 
-    wrapper.setThreadNum(2);
+    wrapper.setThreadNum(1);
     wrapper.createReader();
     wrapper.startReader(bool -> {});
     nativeReader = new LakeSoulArrowReader(wrapper, 1000);
