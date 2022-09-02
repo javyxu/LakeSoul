@@ -491,7 +491,7 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
   }
 
   override def listTables(namespace: Array[String]): Array[Identifier] = {
-    println(namespace.head)
+    println("lakesoul listTables")
     MetaVersion.listTables().asScala.map(table => {
       Identifier.of(Array("default"), table)
     }).toArray
