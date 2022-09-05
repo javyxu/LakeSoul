@@ -41,9 +41,9 @@ import org.apache.spark.sql.lakesoul.{LakeSoulConfig, LakeSoulUtils}
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{AnalysisException, DataFrame, SparkSession}
 
-import java.util.Map
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.collection.immutable.Map
 
 /**
   * A Catalog extension which can properly handle the interaction between the HiveMetaStore and

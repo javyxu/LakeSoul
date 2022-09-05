@@ -31,9 +31,9 @@ object MetaVersion {
 
   def createDatabase(namespace: Array[String]): Unit = ???
 
-  def listDatabases(): util.List[String] = {
+  def listDatabases(): Array[String] = {
     println("[DEBUG]in com.dmetasoul.lakesoul.meta.MetaVersion.listDatabases")
-    util.List.of("default")
+    Array("default")
   }
 
   def isTableExists(table_name: String): Boolean = {
