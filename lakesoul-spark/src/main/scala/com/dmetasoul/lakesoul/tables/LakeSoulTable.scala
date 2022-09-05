@@ -531,4 +531,8 @@ object LakeSoulTable {
   def createTable(data: Dataset[_], tablePath: String): TableCreator =
     new TableCreator().data(data).path(tablePath)
 
+  def listTables(databases: Array[String]): Array[String] = {
+    println("lakesoul listTables")
+    MetaVersion.listTables(databases).asScala.toArray
+  }
 }

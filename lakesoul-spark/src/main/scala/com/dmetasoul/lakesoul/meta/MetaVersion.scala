@@ -29,6 +29,13 @@ object MetaVersion {
 
   val dbManager = new DBManager()
 
+  def createDatabase(namespace: Array[String]): Unit = ???
+
+  def listDatabases(): util.List[String] = {
+    println("[DEBUG]in com.dmetasoul.lakesoul.meta.MetaVersion.listDatabases")
+    util.List.of("default")
+  }
+
   def isTableExists(table_name: String): Boolean = {
     dbManager.isTableExists(table_name)
   }
@@ -65,6 +72,10 @@ object MetaVersion {
   }
 
   def listTables(): util.List[String] = {
+    dbManager.listTables()
+  }
+
+  def listTables(databases: Array[String]): util.List[String] = {
     dbManager.listTables()
   }
 
