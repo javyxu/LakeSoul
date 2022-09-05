@@ -29,7 +29,9 @@ object MetaVersion {
 
   val dbManager = new DBManager()
 
-  def createDatabase(namespace: Array[String]): Unit = ???
+  def createDatabase(namespace: Array[String]): Unit = {
+
+  }
 
   def listDatabases(): Array[String] = {
     println("[DEBUG]in com.dmetasoul.lakesoul.meta.MetaVersion.listDatabases")
@@ -55,7 +57,8 @@ object MetaVersion {
     dbManager.getTablePathFromShortTableName(short_table_name)
   }
 
-  def createNewTable(table_path: String,
+  def createNewTable(namespace: String,
+                     table_path: String,
                      short_table_name: String,
                      table_id: String,
                      table_schema: String,
@@ -68,11 +71,11 @@ object MetaVersion {
     val json = new JSONObject()
     configuration.foreach(x => json.put(x._1,x._2))
     json.put("hashBucketNum", String.valueOf(bucket_num))
-    dbManager.createNewTable(table_id, short_table_name, table_path, table_schema, json, partitions)
+    dbManager.createNewTable(table_id, namespace, short_table_name, table_path, table_schema, json, partitions)
   }
 
   def listTables(): util.List[String] = {
-    dbManager.listTables()
+    listTables(Array("default"))
   }
 
   def listTables(databases: Array[String]): util.List[String] = {
@@ -105,6 +108,7 @@ object MetaVersion {
       case _ => -1
     }
     TableInfo(
+      info.getDatabase,
       Some(table_path),
       info.getTableId,
       info.getTableSchema,
