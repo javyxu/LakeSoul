@@ -29,13 +29,13 @@ object MetaVersion {
 
   val dbManager = new DBManager()
 
-  def createDatabase(namespace: Array[String]): Unit = {
+  def createNamespace(namespace: Array[String]): Unit = {
 
   }
 
-  def listDatabases(): Array[String] = {
-    println("[DEBUG]in com.dmetasoul.lakesoul.meta.MetaVersion.listDatabases")
-    Array("default")
+  def listNamespaces(): Array[String] = {
+    println("[DEBUG]in com.dmetasoul.lakesoul.meta.MetaVersion.listNamespaces")
+    dbManager.listTables().asScala.toArray
   }
 
   def isTableExists(table_name: String): Boolean = {
