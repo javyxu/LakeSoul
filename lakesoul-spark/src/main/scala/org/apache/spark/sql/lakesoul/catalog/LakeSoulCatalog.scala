@@ -510,7 +510,7 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
 
   override def listNamespaces() = {
     println("lakesoul listNamespaces")
-    Array(MetaVersion.listDatabases())
+    Array(MetaVersion.listNamespaces())
   }
 
 }
