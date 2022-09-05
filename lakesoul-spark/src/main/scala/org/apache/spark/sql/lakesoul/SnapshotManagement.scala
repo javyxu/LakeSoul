@@ -65,7 +65,7 @@ class SnapshotManagement(path: String) extends Logging {
 
   private def initSnapshot: Snapshot = {
     val table_id = "table_" + UUID.randomUUID().toString
-    val table_info = TableInfo(Some(table_path), table_id)
+    val table_info = TableInfo("default", Some(table_path), table_id)
     val partition_arr = Array(
       PartitionInfo(table_id, MetaUtils.DEFAULT_RANGE_PARTITION_VALUE,0)
     )
@@ -105,7 +105,7 @@ class SnapshotManagement(path: String) extends Logging {
       MetaVersion.getTableInfo(table_path)
     } else {
       val table_id = "table_" + UUID.randomUUID().toString
-      TableInfo(Some(table_path), table_id)
+      TableInfo("default", Some(table_path), table_id)
     }
   }
 
