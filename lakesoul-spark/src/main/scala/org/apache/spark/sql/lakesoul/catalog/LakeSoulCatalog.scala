@@ -41,6 +41,7 @@ import org.apache.spark.sql.lakesoul.{LakeSoulConfig, LakeSoulUtils}
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{AnalysisException, DataFrame, SparkSession}
 
+import java.util.Map
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -492,15 +493,24 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
 
   override def listTables(namespace: Array[String]): Array[Identifier] = {
     println("lakesoul listTables")
-    Array(Identifier.of(Array("default"), "a"))
-//    MetaVersion.listTables().asScala.map(table => {
-//      Identifier.of(Array("default"), table)
-//    }).toArray
+    MetaVersion.listTables().asScala.map(table => {
+      Identifier.of(Array("default"), table)
+    }).toArray
   }
 
-  override def listNamespaces(): Array[Array[String]] = {
+  //=============
+  //Namespace
+  //=============
+
+  override def createNamespace(namespace: Array[String], metadata: util.Map[String, String]):Unit = {
+    super.createNamespace(namespace, metadata)
+    MetaVersion.createDatabase(namespace)
+
+  }
+
+  override def listNamespaces() = {
     println("lakesoul listNamespaces")
-    Array(Array("lakesoul"))
+    Array(MetaVersion.listDatabases())
   }
 
 }
