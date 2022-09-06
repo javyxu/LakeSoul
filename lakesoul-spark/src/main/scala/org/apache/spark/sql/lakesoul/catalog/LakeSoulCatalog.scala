@@ -585,4 +585,9 @@ object LakeSoulCatalog{
     println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.useNamespace")
     currentDefaultNamespace = namespaces
   }
+
+  def showCurrentNamespace():Array[String] = {
+    currentDefaultNamespace
+  }
+
 }
