@@ -536,12 +536,19 @@ object LakeSoulTable {
   //===========
 
   def listTables(namespaces: Array[String]): Array[String] = {
-    println("lakesoul listTables")
+    println("[DEBUG]on com.dmetasoul.lakesoul.tables.LakeSoulTable.listTables")
     MetaVersion.listTables(namespaces).asScala.toArray
   }
 
   def createNamespace(namespaces: Array[String]): Unit = {
-    println("lakesoul listTables")
+    println("[DEBUG]on com.dmetasoul.lakesoul.tables.LakeSoulTable.createNamespace")
     MetaVersion.createNamespace(namespaces)
+  }
+
+  var currentDefaultNamespace: Array[String] = Array("default")
+
+  def useNamespace(namespaces: Array[String]): Unit = {
+    println("[DEBUG]on com.dmetasoul.lakesoul.tables.LakeSoulTable.useNamespace")
+    currentDefaultNamespace = namespaces
   }
 }
