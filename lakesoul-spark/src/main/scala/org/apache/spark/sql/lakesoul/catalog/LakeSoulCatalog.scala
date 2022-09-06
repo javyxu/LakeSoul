@@ -516,7 +516,7 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
   }
 
   override def defaultNamespace(): Array[String] = {
-    LakeSoulTable.currentDefaultNamespace
+    LakeSoulCatalog.currentDefaultNamespace
   }
 
 }
@@ -561,5 +561,28 @@ trait SupportsPathIdentifier extends TableCatalog {
     } else {
       super.tableExists(ident)
     }
+  }
+}
+
+object LakeSoulCatalog{
+  //===========
+  // namespaces
+  //===========
+
+  def listTables(namespaces: Array[String]): Array[String] = {
+    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.listTables")
+    MetaVersion.listTables(namespaces).asScala.toArray
+  }
+
+  def createNamespace(namespaces: Array[String]): Unit = {
+    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.createNamespace")
+    MetaVersion.createNamespace(namespaces)
+  }
+
+  var currentDefaultNamespace: Array[String] = Array("default")
+
+  def useNamespace(namespaces: Array[String]): Unit = {
+    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.useNamespace")
+    currentDefaultNamespace = namespaces
   }
 }

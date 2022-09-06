@@ -531,24 +531,4 @@ object LakeSoulTable {
   def createTable(data: Dataset[_], tablePath: String): TableCreator =
     new TableCreator().data(data).path(tablePath)
 
-  //===========
-  // namespaces
-  //===========
-
-  def listTables(namespaces: Array[String]): Array[String] = {
-    println("[DEBUG]on com.dmetasoul.lakesoul.tables.LakeSoulTable.listTables")
-    MetaVersion.listTables(namespaces).asScala.toArray
-  }
-
-  def createNamespace(namespaces: Array[String]): Unit = {
-    println("[DEBUG]on com.dmetasoul.lakesoul.tables.LakeSoulTable.createNamespace")
-    MetaVersion.createNamespace(namespaces)
-  }
-
-  var currentDefaultNamespace: Array[String] = Array("default")
-
-  def useNamespace(namespaces: Array[String]): Unit = {
-    println("[DEBUG]on com.dmetasoul.lakesoul.tables.LakeSoulTable.useNamespace")
-    currentDefaultNamespace = namespaces
-  }
 }
