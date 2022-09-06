@@ -35,7 +35,7 @@ object MetaVersion {
 
   def listNamespaces(): Array[String] = {
     println("[DEBUG]in com.dmetasoul.lakesoul.meta.MetaVersion.listNamespaces")
-    dbManager.listTables().asScala.toArray
+    dbManager.listDatabases().asScala.toArray
   }
 
   def isTableExists(table_name: String): Boolean = {
