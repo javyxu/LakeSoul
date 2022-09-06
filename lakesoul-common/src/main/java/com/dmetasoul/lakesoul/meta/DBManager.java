@@ -111,9 +111,8 @@ public class DBManager {
         }
     }
 
-    public List<String> listDatabases() {
-        return listTablesByDatabase("default");
-    }
+
+
     public List<String> listTables() {
         return listTablesByDatabase("default");
     }
@@ -559,6 +558,17 @@ public class DBManager {
         PartitionInfo curPartitionInfo = partitionInfoDao.selectLatestPartitionInfo(tableId, partitionDesc);
         partitionInfo.setVersion(curPartitionInfo.getVersion() + 1);
         return partitionInfoDao.insert(partitionInfo);
+    }
+
+    //==============
+    //databases
+    //==============
+    public List<String> listNamespaces() {
+        return listTablesByDatabase("default");
+    }
+
+    public void createNewNamespace(String namespace) {
+
     }
 
 }
