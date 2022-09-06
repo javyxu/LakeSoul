@@ -75,11 +75,11 @@ public class DBManager {
         return tableInfoDao.selectByTableName(tableName);
     }
 
-    public void createNewTable(String tableId, String database, String tableName, String tablePath, String tableSchema,
+    public void createNewTable(String tableId, String tableNamespace, String tableName, String tablePath, String tableSchema,
                                JSONObject properties, String partitions) {
         TableInfo tableInfo = new TableInfo();
         tableInfo.setTableId(tableId);
-        tableInfo.setDatabase(database);
+        tableInfo.setTableNamespace(tableNamespace);
         tableInfo.setTableName(tableName);
         tableInfo.setTablePath(tablePath);
         tableInfo.setTableSchema(tableSchema);

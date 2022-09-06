@@ -130,7 +130,7 @@ trait Transaction extends TransactionalWrite with Logging {
 
   protected lazy val table_path: String = tableInfo.table_path_s.get
 
-  protected lazy val namespace: String = tableInfo.namespace
+  protected lazy val table_namespace: String = tableInfo.namespace
 
   /**
     * Tracks the data that could have been seen by recording the partition
@@ -152,7 +152,7 @@ trait Transaction extends TransactionalWrite with Logging {
     val updatedConfig = LakeSoulConfig.mergeGlobalConfigs(
       spark.sessionState.conf, Map.empty)
     TableInfo(
-      namespace = namespace,
+      namespace = table_namespace,
       table_path_s = Some(snapshot.getTableName),
       table_id = snapshot.getTableInfo.table_id,
       configuration = updatedConfig,
@@ -244,7 +244,7 @@ trait Transaction extends TransactionalWrite with Logging {
       assert(!committed, "Transaction already committed.")
       if (isFirstCommit) {
         MetaVersion.createNewTable(
-          namespace,
+          table_namespace,
           table_path,
           if (shortTableName.isDefined) shortTableName.get else "",
           tableInfo.table_id,
