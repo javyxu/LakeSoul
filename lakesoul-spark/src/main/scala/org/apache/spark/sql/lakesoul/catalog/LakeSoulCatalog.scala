@@ -161,7 +161,6 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
                             schema: StructType,
                             partitions: Array[Transform],
                             properties: util.Map[String, String]): Table = {
-    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.createTable")
     if (LakeSoulSourceUtils.isLakeSoulDataSourceName(getProvider(properties))) {
       createLakeSoulTable(
         ident, schema, partitions, properties, sourceQuery = None, TableCreationModes.Create)

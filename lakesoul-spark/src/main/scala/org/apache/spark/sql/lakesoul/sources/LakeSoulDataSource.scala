@@ -88,6 +88,7 @@ class LakeSoulDataSource
                               mode: SaveMode,
                               parameters: Map[String, String],
                               data: DataFrame): BaseRelation = {
+    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.sources.LakeSoulDataSource.createRelation")
     val path = parameters.getOrElse("path", {
       throw LakeSoulErrors.pathNotSpecifiedException
     })
