@@ -22,7 +22,7 @@ import com.alibaba.fastjson.JSONObject;
 public class TableInfo {
     private String tableId;
 
-    private String database;
+    private String tableNamespace;
 
     private String tableName;
 
@@ -42,12 +42,12 @@ public class TableInfo {
         this.tableId = tableId;
     }
 
-    public String getDatabase() {
+    public String getTableNamespace() {
         return tableId;
     }
 
-    public void setDatabase(String database) {
-        this.database = database;
+    public void setTableNamespace(String tableNamespace) {
+        this.tableNamespace = tableNamespace;
     }
 
     public String getTableName() {
