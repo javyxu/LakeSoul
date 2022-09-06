@@ -9,6 +9,7 @@
         <module>lakesoul-common</module>
         <module>lakesoul-spark</module>
         <module>lakesoul-flink</module>
+        <module>flink-tools</module>
     </modules>
     <packaging>pom</packaging>
     <name>LakeSoul POM</name>
