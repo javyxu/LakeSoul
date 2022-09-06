@@ -111,6 +111,9 @@ public class DBManager {
         }
     }
 
+    public List<String> listDatabases() {
+        return listTablesByDatabase("default");
+    }
     public List<String> listTables() {
         return listTablesByDatabase("default");
     }
