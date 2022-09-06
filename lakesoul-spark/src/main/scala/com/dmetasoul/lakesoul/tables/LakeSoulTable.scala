@@ -531,8 +531,17 @@ object LakeSoulTable {
   def createTable(data: Dataset[_], tablePath: String): TableCreator =
     new TableCreator().data(data).path(tablePath)
 
-  def listTables(databases: Array[String]): Array[String] = {
+  //===========
+  // namespaces
+  //===========
+
+  def listTables(namespaces: Array[String]): Array[String] = {
     println("lakesoul listTables")
-    MetaVersion.listTables(databases).asScala.toArray
+    MetaVersion.listTables(namespaces).asScala.toArray
+  }
+
+  def createNamespace(namespaces: Array[String]): Unit = {
+    println("lakesoul listTables")
+    MetaVersion.createNamespace(namespaces)
   }
 }
