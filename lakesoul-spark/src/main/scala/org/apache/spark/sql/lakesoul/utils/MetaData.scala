@@ -46,7 +46,7 @@ case class Format(provider: String = "parquet",
                   options: Map[String, String] = Map.empty)
 // table_schema is json format data
 // range_column and hash_column are string， not json format ; hash_partition_column contains multi keys，concat with `,`
-case class TableInfo(namespace: String,
+case class TableInfo(namespace: String = "default",
                      table_path_s:  Option[String] = None,
                      table_id: String,
                      table_schema: String = null,
