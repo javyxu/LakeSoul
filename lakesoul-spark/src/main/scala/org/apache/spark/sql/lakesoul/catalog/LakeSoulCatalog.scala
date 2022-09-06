@@ -503,7 +503,8 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
   //=============
 
   override def createNamespace(namespace: Array[String], metadata: util.Map[String, String]):Unit = {
-    super.createNamespace(namespace, metadata)
+    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.createNamespace, " + namespace.head + " " + metadata.toString)
+//    super.createNamespace(namespace, metadata)
     MetaVersion.createNamespace(namespace)
 
   }
