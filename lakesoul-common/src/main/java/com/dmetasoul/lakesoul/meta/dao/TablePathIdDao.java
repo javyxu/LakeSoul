@@ -85,10 +85,11 @@ public class TablePathIdDao {
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        String sql = String.format("select table_path from table_path_id where table_namespace = \"%s\"", table_namespace);;
+        String sql = String.format("select table_path from table_path_id where table_namespace = \"%s\"", table_namespace);
         List<String> list = new ArrayList<>();
         try {
             conn = DBConnector.getConn();
+            System.out.println("try exec sql: "+ sql);
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
