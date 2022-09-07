@@ -80,7 +80,7 @@ object MetaVersion {
   }
 
   def listTables(namespaces: Array[String]): util.List[String] = {
-    dbManager.listTables()
+    dbManager.listTablesByNamespace(namespaces.head)
   }
 
   def getTableInfo(table_path: String): TableInfo = {
