@@ -112,7 +112,8 @@ class SnapshotManagement(path: String) extends Logging {
       MetaVersion.getTableInfo(table_path)
     } else {
       val table_id = "table_" + UUID.randomUUID().toString
-      TableInfo(LakeSoulCatalog.currentDefaultNamespace, Some(table_path), table_id)
+      // TODO: unwrap namespaces: array[string] here
+      TableInfo(LakeSoulCatalog.currentDefaultNamespace.head, Some(table_path), table_id)
     }
   }
 
