@@ -117,8 +117,10 @@ public class DBManager {
         return listTablesByNamespace("default");
     }
 
-    public List<String> listTablesByNamespace(String database) {
-        List<String> rsList = tablePathIdDao.listAllPath();
+    public List<String> listTablesByNamespace(String table_namespace) {
+        System.out.println("[DEBUG]on com.dmetasoul.lakesoul.meta.DBManager.listTablesByNamespace");
+//        List<String> rsList = tablePathIdDao.listAllPath();
+        List<String> rsList = tablePathIdDao.listAllPath(table_namespace);
         return rsList;
     }
 
