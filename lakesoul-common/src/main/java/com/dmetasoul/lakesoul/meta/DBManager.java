@@ -75,11 +75,11 @@ public class DBManager {
         return tableInfoDao.selectByTableName(tableName);
     }
 
-    public void createNewTable(String tableId, String tableNamespace, String tableName, String tablePath, String tableSchema,
+    public void createNewTable(String tableId, String namespace, String tableName, String tablePath, String tableSchema,
                                JSONObject properties, String partitions) {
         TableInfo tableInfo = new TableInfo();
         tableInfo.setTableId(tableId);
-        tableInfo.setTableNamespace(tableNamespace);
+        tableInfo.setTableNamespace(namespace);
         tableInfo.setTableName(tableName);
         tableInfo.setTablePath(tablePath);
         tableInfo.setTableSchema(tableSchema);
@@ -114,10 +114,10 @@ public class DBManager {
 
 
     public List<String> listTables() {
-        return listTablesByDatabase("default");
+        return listTablesByNamespace("default");
     }
 
-    public List<String> listTablesByDatabase(String database) {
+    public List<String> listTablesByNamespace(String database) {
         List<String> rsList = tablePathIdDao.listAllPath();
         return rsList;
     }
@@ -564,7 +564,7 @@ public class DBManager {
     //databases
     //==============
     public List<String> listNamespaces() {
-        return listTablesByDatabase("default");
+        return listTablesByNamespace("default");
     }
 
     public void createNewNamespace(String namespace) {
