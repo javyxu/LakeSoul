@@ -32,7 +32,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper
 import org.apache.spark.sql.execution.datasources.v2.DataSourceV2Relation
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.lakesoul.catalog.LakeSoulTableV2
+import org.apache.spark.sql.lakesoul.catalog.{LakeSoulCatalog, LakeSoulTableV2}
 import org.apache.spark.sql.lakesoul.exception.LakeSoulErrors
 import org.apache.spark.sql.lakesoul.sources.{LakeSoulBaseRelation, LakeSoulSourceUtils}
 import org.apache.spark.sql.lakesoul.utils.{DataFileInfo, PartitionInfo, SparkUtil, TableInfo}
@@ -105,7 +105,7 @@ class SnapshotManagement(path: String) extends Logging {
       MetaVersion.getTableInfo(table_path)
     } else {
       val table_id = "table_" + UUID.randomUUID().toString
-      TableInfo("default", Some(table_path), table_id)
+      TableInfo(LakeSoulCatalog.currentDefaultNamespace, Some(table_path), table_id)
     }
   }
 
