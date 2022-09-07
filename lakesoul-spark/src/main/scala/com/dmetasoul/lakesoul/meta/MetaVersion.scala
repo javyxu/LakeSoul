@@ -18,6 +18,7 @@ package com.dmetasoul.lakesoul.meta
 
 import com.alibaba.fastjson.JSONObject
 import com.google.common.base.Splitter
+import org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog
 import org.apache.spark.sql.lakesoul.utils.{PartitionInfo, TableInfo}
 
 import java.util
@@ -75,14 +76,18 @@ object MetaVersion {
   }
 
   def listTables(): util.List[String] = {
-    listTables(Array("default"))
+    listTables(LakeSoulCatalog.currentDefaultNamespace)
   }
 
-  def listTables(databases: Array[String]): util.List[String] = {
+  def listTables(namespaces: Array[String]): util.List[String] = {
     dbManager.listTables()
   }
 
   def getTableInfo(table_path: String): TableInfo = {
+    getTableInfo(LakeSoulCatalog.currentDefaultNamespace, table_path)
+  }
+
+  def getTableInfo(namespace: Array[String], table_path: String): TableInfo = {
     val info = dbManager.getTableInfo(table_path)
     if (info == null) {
       return null
