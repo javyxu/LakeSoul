@@ -85,10 +85,10 @@ object MetaVersion {
 
   def getTableInfo(table_path: String): TableInfo = {
     println("[DEBUG]on com.dmetasoul.lakesoul.meta.MetaVersion.getTableInfo:" + LakeSoulCatalog.currentDefaultNamespace.head)
-    getTableInfo(LakeSoulCatalog.currentDefaultNamespace, table_path)
+    getTableInfo(LakeSoulCatalog.currentDefaultNamespace.head, table_path)
   }
 
-  def getTableInfo(namespace: Array[String], table_path: String): TableInfo = {
+  def getTableInfo(namespace: String, table_path: String): TableInfo = {
     val info = dbManager.getTableInfo(table_path)
     if (info == null) {
       return null
@@ -114,7 +114,7 @@ object MetaVersion {
       case _ => -1
     }
     TableInfo(
-      namespace.head,
+      namespace,
       Some(table_path),
       info.getTableId,
       info.getTableSchema,
