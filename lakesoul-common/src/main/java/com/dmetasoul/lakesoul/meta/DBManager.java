@@ -108,7 +108,7 @@ public class DBManager {
         }
         boolean insertPathFlag = true;
         if (StringUtils.isNotBlank(tablePath)) {
-            insertPathFlag = tablePathIdDao.insert(new TablePathId(tablePath, tableId));
+            insertPathFlag = tablePathIdDao.insert(new TablePathId(tablePath, tableId, namespace));
             if (!insertPathFlag) {
                 tableNameIdDao.deleteByTableId(tableId);
                 throw new IllegalStateException("this table path already exists!");
@@ -582,7 +582,7 @@ public class DBManager {
     //namespace
     //==============
     public List<String> listNamespaces() {
-        return listTablesByNamespace("default");
+        return namespaceDao.listNamespace();
     }
 
     public void createNewNamespace(String name,
@@ -590,7 +590,6 @@ public class DBManager {
         Namespace namespace = new Namespace();
         namespace.setName(name);
         namespace.setProperties(properties);
-
 
         boolean insertNamespaceFlag = namespaceDao.insert(namespace);
         if (!insertNamespaceFlag) {

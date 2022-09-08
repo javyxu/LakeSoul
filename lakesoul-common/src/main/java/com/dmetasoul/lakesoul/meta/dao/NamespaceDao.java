@@ -5,11 +5,13 @@ import com.dmetasoul.lakesoul.meta.DBUtil;
 import com.dmetasoul.lakesoul.meta.entity.Namespace;
 import com.dmetasoul.lakesoul.meta.entity.TableInfo;
 import com.dmetasoul.lakesoul.meta.entity.TablePathId;
+import org.apache.commons.lang.NotImplementedException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public class NamespaceDao {
     public boolean insert(Namespace namespace) {
@@ -68,5 +70,9 @@ public class NamespaceDao {
         } finally {
             DBConnector.closeConn(pstmt, conn);
         }
+    }
+
+    public List<String> listNamespace() {
+        throw new NotImplementedException();
     }
 }
