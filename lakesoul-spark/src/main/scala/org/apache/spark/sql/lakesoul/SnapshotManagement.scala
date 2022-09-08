@@ -74,6 +74,7 @@ class SnapshotManagement(path: String) extends Logging {
 
 
   private def getCurrentSnapshot: Snapshot = {
+    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.getCurrentSnapshot:" + table_path)
     if (LakeSoulSourceUtils.isLakeSoulTableExists(table_path)) {
       createSnapshot
     } else {
