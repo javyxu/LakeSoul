@@ -93,6 +93,8 @@ class LakeSoulDataSource
       throw LakeSoulErrors.pathNotSpecifiedException
     })
     val snapshot_manage = SnapshotManagement(SparkUtil.makeQualifiedTablePath(new Path(path)).toString)
+    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.sources.LakeSoulDataSource.createRelation:" + snapshot_manage.snapshot.getTableInfo.toString)
+
 
     WriteIntoTable(
       snapshot_manage,
