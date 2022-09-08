@@ -30,8 +30,8 @@ object MetaVersion {
 
   val dbManager = new DBManager()
 
-  def createNamespace(namespace: Array[String]): Unit = {
-    dbManager.createNewNamespace(namespace.head)
+  def createNamespace(namespace: String): Unit = {
+    dbManager.createNewNamespace(namespace, new JSONObject())
   }
 
   def listNamespaces(): Array[String] = {
@@ -73,10 +73,6 @@ object MetaVersion {
     configuration.foreach(x => json.put(x._1,x._2))
     json.put("hashBucketNum", String.valueOf(bucket_num))
     dbManager.createNewTable(table_id, table_namespace, short_table_name, table_path, table_schema, json, partitions)
-  }
-
-  def listTables(): util.List[String] = {
-    listTables(LakeSoulCatalog.currentDefaultNamespace)
   }
 
   def listTables(namespaces: Array[String]): util.List[String] = {
