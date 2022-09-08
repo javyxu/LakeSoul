@@ -78,10 +78,29 @@ public class TablePathIdDao {
         return list;
     }
     public List<String> listAllPath() {
-        return listAllPath("default");
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String sql = String.format("select table_path from table_path_id");
+        List<String> list = new ArrayList<>();
+        try {
+            conn = DBConnector.getConn();
+            System.out.println("try exec sql: "+ sql);
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String tablePath = rs.getString("table_path");
+                list.add(tablePath);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnector.closeConn(rs, pstmt, conn);
+        }
+        return list;
     }
 
-    public List<String> listAllPath(String table_namespace) {
+    public List<String> listAllPathByNamespace(String table_namespace) {
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;

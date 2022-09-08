@@ -492,10 +492,11 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
   }
 
   // todo: invalid on spark v3.1.2
-  override def listTables(namespace: Array[String]): Array[Identifier] = {
-    MetaVersion.listTables().asScala.map(table => {
-      Identifier.of(Array("default"), table)
-    }).toArray
+  override def listTables(namespaces: Array[String]): Array[Identifier] = {
+    LakeSoulCatalog.listTables(namespaces)
+//    MetaVersion.listTables().asScala.map(table => {
+//      Identifier.of(Array("default"), table)
+//    }).toArray
   }
 
   //=============
@@ -503,10 +504,10 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
   //=============
 
   // todo: invalid on spark v3.1.2
-  override def createNamespace(namespace: Array[String], metadata: util.Map[String, String]):Unit = {
-    super.createNamespace(namespace, metadata)
-    MetaVersion.createNamespace(namespace)
-
+  override def createNamespace(namespaces: Array[String], metadata: util.Map[String, String]):Unit = {
+//    super.createNamespace(namespace, metadata)
+//    MetaVersion.createNamespace(namespace)
+    LakeSoulCatalog.createNamespace(namespaces)
   }
 
   override def listNamespaces() = {
@@ -568,14 +569,22 @@ object LakeSoulCatalog{
   // namespaces
   //===========
 
-  def listTables(namespaces: Array[String]): Array[String] = {
+
+  def listTables(): Array[Identifier] = {
+    listTables(currentDefaultNamespace)
+  }
+
+  def listTables(namespaces: Array[String]): Array[Identifier] = {
     println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.listTables")
-    MetaVersion.listTables(namespaces).asScala.toArray
+//    MetaVersion.listTables(namespaces).asScala.toArray
+    MetaVersion.listTables(namespaces).asScala.map(table => {
+      Identifier.of(namespaces, table)
+    }).toArray
   }
 
   def createNamespace(namespaces: Array[String]): Unit = {
     println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.createNamespace")
-    MetaVersion.createNamespace(namespaces)
+    MetaVersion.createNamespace(namespaces.head)
   }
 
   var currentDefaultNamespace: Array[String] = Array("default")

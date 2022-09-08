@@ -25,6 +25,8 @@ import org.apache.commons.lang.StringUtils;
 import java.util.*;
 
 public class DBManager {
+
+    private NamespaceDao namespaceDao;
     private TableInfoDao tableInfoDao;
     private TableNameIdDao tableNameIdDao;
     private TablePathIdDao tablePathIdDao;
@@ -32,6 +34,7 @@ public class DBManager {
     private PartitionInfoDao partitionInfoDao;
 
     public DBManager() {
+        namespaceDao = DBFactory.getNamespaceDao();
         tableInfoDao = DBFactory.getTableInfoDao();
         tableNameIdDao = DBFactory.getTableNameIdDao();
         tablePathIdDao = DBFactory.getTablePathIdDao();
@@ -114,13 +117,16 @@ public class DBManager {
 
 
     public List<String> listTables() {
-        return listTablesByNamespace("default");
+        System.out.println("[DEBUG]on com.dmetasoul.lakesoul.meta.DBManager.listTables");
+//        List<String> rsList = tablePathIdDao.listAllPath();
+        List<String> rsList = tablePathIdDao.listAllPath();
+        return rsList;
     }
 
     public List<String> listTablesByNamespace(String table_namespace) {
         System.out.println("[DEBUG]on com.dmetasoul.lakesoul.meta.DBManager.listTablesByNamespace");
 //        List<String> rsList = tablePathIdDao.listAllPath();
-        List<String> rsList = tablePathIdDao.listAllPath(table_namespace);
+        List<String> rsList = tablePathIdDao.listAllPathByNamespace(table_namespace);
         return rsList;
     }
 
@@ -563,13 +569,23 @@ public class DBManager {
     }
 
     //==============
-    //databases
+    //namespace
     //==============
     public List<String> listNamespaces() {
         return listTablesByNamespace("default");
     }
 
-    public void createNewNamespace(String namespace) {
+    public void createNewNamespace(String name,
+                                   JSONObject properties) {
+        Namespace namespace = new Namespace();
+        namespace.setName(name);
+        namespace.setProperties(properties);
+
+
+        boolean insertNamespaceFlag = namespaceDao.insert(namespace);
+        if (!insertNamespaceFlag) {
+            throw new IllegalStateException("this namespace already exists!");
+        }
 
     }
 
