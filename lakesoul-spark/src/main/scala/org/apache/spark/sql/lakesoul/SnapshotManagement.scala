@@ -55,6 +55,7 @@ class SnapshotManagement(path: String) extends Logging {
 
   private def createSnapshot: Snapshot = {
     val table_info = MetaVersion.getTableInfo(table_path)
+    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.createSnapshot:" + table_info)
     val partition_info_arr = MetaVersion.getAllPartitionInfo(table_info.table_id)
 
     if (table_info.table_schema.isEmpty) {
