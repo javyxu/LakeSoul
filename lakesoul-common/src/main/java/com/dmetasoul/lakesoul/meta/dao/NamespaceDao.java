@@ -3,9 +3,12 @@ package com.dmetasoul.lakesoul.meta.dao;
 import com.dmetasoul.lakesoul.meta.DBConnector;
 import com.dmetasoul.lakesoul.meta.DBUtil;
 import com.dmetasoul.lakesoul.meta.entity.Namespace;
+import com.dmetasoul.lakesoul.meta.entity.TableInfo;
+import com.dmetasoul.lakesoul.meta.entity.TablePathId;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class NamespaceDao {
@@ -27,6 +30,29 @@ public class NamespaceDao {
             DBConnector.closeConn(pstmt, conn);
         }
         return result;
+    }
+
+    public Namespace findByName(String name) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String sql = String.format("select * from namespace where name = '%s'", name);
+        Namespace namespace = null;
+        try {
+            conn = DBConnector.getConn();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            namespace = new Namespace();
+            while (rs.next()) {
+                namespace.setName(rs.getString("name"));
+                namespace.setProperties(DBUtil.stringToJSON(rs.getString("properties")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnector.closeConn(rs, pstmt, conn);
+        }
+        return namespace;
     }
 
     public void deleteByName(String name) {
