@@ -113,6 +113,7 @@ class SnapshotManagement(path: String) extends Logging {
   }
 
   def startTransaction(): TransactionCommit = {
+    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.startTransaction:"+ this.snapshot.getTableInfo.toString)
     updateSnapshot()
     new TransactionCommit(this)
   }
