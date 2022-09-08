@@ -242,6 +242,7 @@ trait Transaction extends TransactionalWrite with Logging {
     snapshotManagement.lockInterruptibly {
       assert(!committed, "Transaction already committed.")
       if (isFirstCommit) {
+        logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.Transaction.commit:"+tableInfo.toString)
         MetaVersion.createNewTable(
           tableInfo.namespace,
           table_path,
