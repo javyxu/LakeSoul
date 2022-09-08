@@ -15,7 +15,7 @@ public class NamespaceDao {
         boolean result = true;
         try {
             conn = DBConnector.getConn();
-            pstmt = conn.prepareStatement("insert into namespace(namespace, properties) " +
+            pstmt = conn.prepareStatement("insert into namespace(name, properties) " +
                     "values (?, ?)");
             pstmt.setString(1, namespace.getName());
             pstmt.setString(2, DBUtil.jsonToString(namespace.getProperties()));
