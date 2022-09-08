@@ -129,9 +129,11 @@ public class TablePathIdDao {
         boolean result = true;
         try {
             conn = DBConnector.getConn();
-            pstmt = conn.prepareStatement("insert into table_path_id (table_path, table_id) values (?, ?)");
+            pstmt = conn.prepareStatement("insert into table_path_id (table_path, table_id, table_namespace) values (?, ?, ?)");
             pstmt.setString(1, tablePathId.getTablePath());
             pstmt.setString(2, tablePathId.getTableId());
+            pstmt.setString(3, tablePathId.getTableNamespace());
+            System.out.println("try exec sql: "+ pstmt);
             pstmt.execute();
         } catch (SQLException e) {
             result = false;
