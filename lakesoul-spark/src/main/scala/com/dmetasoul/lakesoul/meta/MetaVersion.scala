@@ -79,12 +79,15 @@ object MetaVersion {
     dbManager.createNewTable(table_id, table_namespace, short_table_name, table_path, table_schema, json, partitions)
   }
 
+  def listTables(): util.List[String] = {
+    listTables(Array("default"))
+  }
+
   def listTables(namespaces: Array[String]): util.List[String] = {
-    dbManager.listTablesByNamespace(namespaces.head)
+    dbManager.listTablePathsByNamespace(namespaces.head)
   }
 
   def getTableInfo(table_path: String): TableInfo = {
-    println("[DEBUG]on com.dmetasoul.lakesoul.meta.MetaVersion.getTableInfo:" + LakeSoulCatalog.currentDefaultNamespace.head)
     getTableInfo(LakeSoulCatalog.currentDefaultNamespace.head, table_path)
   }
 

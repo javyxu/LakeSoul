@@ -127,15 +127,12 @@ public class DBManager {
 
 
     public List<String> listTables() {
-        System.out.println("[DEBUG]on com.dmetasoul.lakesoul.meta.DBManager.listTables");
 //        List<String> rsList = tablePathIdDao.listAllPath();
         List<String> rsList = tablePathIdDao.listAllPath();
         return rsList;
     }
 
-    public List<String> listTablesByNamespace(String table_namespace) {
-        System.out.println("[DEBUG]on com.dmetasoul.lakesoul.meta.DBManager.listTablesByNamespace");
-//        List<String> rsList = tablePathIdDao.listAllPath();
+    public List<String> listTablePathsByNamespace(String table_namespace) {
         List<String> rsList = tablePathIdDao.listAllPathByNamespace(table_namespace);
         return rsList;
     }

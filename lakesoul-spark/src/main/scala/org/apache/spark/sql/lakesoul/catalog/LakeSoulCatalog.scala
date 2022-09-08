@@ -575,7 +575,6 @@ object LakeSoulCatalog{
   }
 
   def listTables(namespaces: Array[String]): Array[Identifier] = {
-    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.listTables")
 //    MetaVersion.listTables(namespaces).asScala.toArray
     MetaVersion.listTables(namespaces).asScala.map(table => {
       Identifier.of(namespaces, table)
@@ -583,14 +582,12 @@ object LakeSoulCatalog{
   }
 
   def createNamespace(namespaces: Array[String]): Unit = {
-    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.createNamespace")
     MetaVersion.createNamespace(namespaces.head)
   }
 
   var currentDefaultNamespace: Array[String] = Array("default")
 
   def useNamespace(namespaces: Array[String]): Unit = {
-    println("[DEBUG]on org.apache.spark.sql.lakesoul.catalog.LakeSoulCatalog.useNamespace")
     currentDefaultNamespace = namespaces
   }
 

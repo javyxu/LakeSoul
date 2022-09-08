@@ -51,10 +51,32 @@ public class TablePathIdDao {
     }
 
     public List<TablePathId> listAll() {
-        return listAll("default");
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String sql = "select * from table_path_id";
+        List<TablePathId> list = new ArrayList<>();
+        try {
+            conn = DBConnector.getConn();
+            System.out.println("try exec sql: "+ sql);
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                TablePathId tablePathId = new TablePathId();
+                tablePathId.setTablePath(rs.getString("table_path"));
+                tablePathId.setTableId(rs.getString("table_id"));
+                tablePathId.setTableNamespace(rs.getString("table_namespace"));
+                list.add(tablePathId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnector.closeConn(rs, pstmt, conn);
+        }
+        return list;
     }
 
-    public List<TablePathId> listAll(String table_namespace) {
+    public List<TablePathId> listAllByNamespace(String table_namespace) {
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -68,6 +90,7 @@ public class TablePathIdDao {
                 TablePathId tablePathId = new TablePathId();
                 tablePathId.setTablePath(rs.getString("table_path"));
                 tablePathId.setTableId(rs.getString("table_id"));
+                tablePathId.setTableNamespace(rs.getString("table_namespace"));
                 list.add(tablePathId);
             }
         } catch (SQLException e) {
@@ -77,11 +100,12 @@ public class TablePathIdDao {
         }
         return list;
     }
+
     public List<String> listAllPath() {
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        String sql = String.format("select table_path from table_path_id");
+        String sql = "select table_path from table_path_id";
         List<String> list = new ArrayList<>();
         try {
             conn = DBConnector.getConn();
