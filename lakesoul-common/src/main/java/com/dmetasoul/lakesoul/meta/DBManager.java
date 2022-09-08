@@ -42,6 +42,15 @@ public class DBManager {
         partitionInfoDao = DBFactory.getPartitionInfoDao();
     }
 
+    public boolean isNamespaceExists(String table_namespace) {
+        Namespace namespace = namespaceDao.findByName(table_namespace);
+        if (namespace == null) {
+            return false;
+        }
+
+        return true;
+    }
+
     public boolean isTableExists(String tablePath) {
         TablePathId tablePathId = tablePathIdDao.findByTablePath(tablePath);
         if (tablePathId == null) {
@@ -80,6 +89,7 @@ public class DBManager {
 
     public void createNewTable(String tableId, String namespace, String tableName, String tablePath, String tableSchema,
                                JSONObject properties, String partitions) {
+
         TableInfo tableInfo = new TableInfo();
         tableInfo.setTableId(tableId);
         tableInfo.setTableNamespace(namespace);

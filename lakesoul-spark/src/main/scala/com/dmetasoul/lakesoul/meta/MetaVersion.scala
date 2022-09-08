@@ -47,6 +47,10 @@ object MetaVersion {
     dbManager.isTableIdExists(table_name, table_id)
   }
 
+  def isNamespaceExists(table_namespace: String):Boolean ={
+    dbManager.isNamespaceExists(table_namespace)
+  }
+
   //check whether short_table_name exists, and return table path if exists
   def isShortTableNameExists(short_table_name: String): (Boolean, String) = {
     val path = dbManager.getTablePathFromShortTableName(short_table_name)
@@ -80,6 +84,7 @@ object MetaVersion {
   }
 
   def getTableInfo(table_path: String): TableInfo = {
+    println("[DEBUG]on com.dmetasoul.lakesoul.meta.MetaVersion.getTableInfo:" + LakeSoulCatalog.currentDefaultNamespace.head)
     getTableInfo(LakeSoulCatalog.currentDefaultNamespace, table_path)
   }
 
