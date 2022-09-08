@@ -94,6 +94,7 @@ public class TableInfoDao {
             pstmt.setString(5, DBUtil.jsonToString(tableInfo.getProperties()));
             pstmt.setString(6, tableInfo.getPartitions());
             pstmt.setString(7, tableInfo.getTableNamespace());
+            System.out.println("try exec sql: "+ pstmt.toString());
             pstmt.execute();
         } catch (SQLException e) {
             result = false;
