@@ -66,7 +66,7 @@ class SnapshotManagement(path: String) extends Logging {
 
   private def initSnapshot: Snapshot = {
     val table_id = "table_" + UUID.randomUUID().toString
-    val table_info = TableInfo("default", Some(table_path), table_id)
+    val table_info = TableInfo(LakeSoulCatalog.currentDefaultNamespace.head, Some(table_path), table_id)
     val partition_arr = Array(
       PartitionInfo(table_id, MetaUtils.DEFAULT_RANGE_PARTITION_VALUE,0)
     )
@@ -75,10 +75,12 @@ class SnapshotManagement(path: String) extends Logging {
 
 
   private def getCurrentSnapshot: Snapshot = {
-    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.getCurrentSnapshot:" + table_path)
+
     if (LakeSoulSourceUtils.isLakeSoulTableExists(table_path)) {
+      logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.getCurrentSnapshot: LakeSoulSourceUtils.isLakeSoulTableExists" + table_path)
       createSnapshot
     } else {
+      logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.getCurrentSnapshot: not LakeSoulSourceUtils.isLakeSoulTableExists" + table_path)
       //table_name in SnapshotManagement must be a root path, and its parent path shouldn't be lakesoul table
       if (LakeSoulUtils.isLakeSoulTable(table_path)) {
         throw new AnalysisException("table_name is expected as root path in SnapshotManagement")
