@@ -43,7 +43,7 @@ public class TableInfo {
     }
 
     public String getTableNamespace() {
-        return tableId;
+        return tableNamespace;
     }
 
     public void setTableNamespace(String tableNamespace) {
