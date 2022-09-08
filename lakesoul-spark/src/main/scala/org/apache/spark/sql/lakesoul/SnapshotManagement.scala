@@ -55,7 +55,6 @@ class SnapshotManagement(path: String) extends Logging {
 
   private def createSnapshot: Snapshot = {
     val table_info = MetaVersion.getTableInfo(table_path)
-    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.createSnapshot:" + table_info)
     val partition_info_arr = MetaVersion.getAllPartitionInfo(table_info.table_id)
 
     if (table_info.table_schema.isEmpty) {
@@ -77,10 +76,8 @@ class SnapshotManagement(path: String) extends Logging {
   private def getCurrentSnapshot: Snapshot = {
 
     if (LakeSoulSourceUtils.isLakeSoulTableExists(table_path)) {
-      logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.getCurrentSnapshot: LakeSoulSourceUtils.isLakeSoulTableExists" + table_path)
       createSnapshot
     } else {
-      logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.getCurrentSnapshot: not LakeSoulSourceUtils.isLakeSoulTableExists" + table_path)
       //table_name in SnapshotManagement must be a root path, and its parent path shouldn't be lakesoul table
       if (LakeSoulUtils.isLakeSoulTable(table_path)) {
         throw new AnalysisException("table_name is expected as root path in SnapshotManagement")
@@ -115,7 +112,6 @@ class SnapshotManagement(path: String) extends Logging {
   }
 
   def startTransaction(): TransactionCommit = {
-    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.SnapshotManagement.startTransaction:"+ this.snapshot.getTableInfo.toString)
     updateSnapshot()
     new TransactionCommit(this)
   }

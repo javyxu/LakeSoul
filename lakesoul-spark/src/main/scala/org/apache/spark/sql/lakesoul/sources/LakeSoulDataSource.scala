@@ -88,12 +88,10 @@ class LakeSoulDataSource
                               mode: SaveMode,
                               parameters: Map[String, String],
                               data: DataFrame): BaseRelation = {
-    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.sources.LakeSoulDataSource.createRelation")
     val path = parameters.getOrElse("path", {
       throw LakeSoulErrors.pathNotSpecifiedException
     })
     val snapshot_manage = SnapshotManagement(SparkUtil.makeQualifiedTablePath(new Path(path)).toString)
-    logInfo("[DEBUG]on org.apache.spark.sql.lakesoul.sources.LakeSoulDataSource.createRelation:" + snapshot_manage.snapshot.getTableInfo.toString)
 
 
     WriteIntoTable(
