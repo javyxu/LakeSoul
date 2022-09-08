@@ -109,7 +109,7 @@ object MetaVersion {
       case _ => -1
     }
     TableInfo(
-      info.getTableNamespace,
+      namespace.head,
       Some(table_path),
       info.getTableId,
       info.getTableSchema,
