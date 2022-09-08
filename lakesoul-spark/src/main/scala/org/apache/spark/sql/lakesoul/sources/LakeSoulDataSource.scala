@@ -93,7 +93,6 @@ class LakeSoulDataSource
     })
     val snapshot_manage = SnapshotManagement(SparkUtil.makeQualifiedTablePath(new Path(path)).toString)
 
-
     WriteIntoTable(
       snapshot_manage,
       mode = mode,
