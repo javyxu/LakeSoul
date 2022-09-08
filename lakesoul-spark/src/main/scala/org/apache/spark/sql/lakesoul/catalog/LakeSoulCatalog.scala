@@ -500,7 +500,7 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
   }
 
   //=============
-  //Namespace
+  // Namespace
   //=============
 
   // todo: invalid on spark v3.1.2
@@ -510,9 +510,8 @@ class LakeSoulCatalog(val spark: SparkSession) extends DelegatingCatalogExtensio
     LakeSoulCatalog.createNamespace(namespaces)
   }
 
-  override def listNamespaces() = {
-    println("lakesoul listNamespaces")
-    Array(MetaVersion.listNamespaces())
+  override def listNamespaces(): Array[Array[String]] = {
+    LakeSoulCatalog.listNamespaces()
   }
 
   override def defaultNamespace(): Array[String] = {
@@ -593,6 +592,10 @@ object LakeSoulCatalog{
 
   def showCurrentNamespace():Array[String] = {
     currentDefaultNamespace
+  }
+
+  def listNamespaces(): Array[Array[String]] = {
+    Array(MetaVersion.listNamespaces())
   }
 
 }

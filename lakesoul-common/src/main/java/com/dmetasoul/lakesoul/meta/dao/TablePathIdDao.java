@@ -58,7 +58,6 @@ public class TablePathIdDao {
         List<TablePathId> list = new ArrayList<>();
         try {
             conn = DBConnector.getConn();
-            System.out.println("try exec sql: "+ sql);
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -109,7 +108,6 @@ public class TablePathIdDao {
         List<String> list = new ArrayList<>();
         try {
             conn = DBConnector.getConn();
-            System.out.println("try exec sql: "+ sql);
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -132,7 +130,6 @@ public class TablePathIdDao {
         List<String> list = new ArrayList<>();
         try {
             conn = DBConnector.getConn();
-            System.out.println("try exec sql: "+ sql);
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -157,7 +154,6 @@ public class TablePathIdDao {
             pstmt.setString(1, tablePathId.getTablePath());
             pstmt.setString(2, tablePathId.getTableId());
             pstmt.setString(3, tablePathId.getTableNamespace());
-            System.out.println("try exec sql: "+ pstmt);
             pstmt.execute();
         } catch (SQLException e) {
             result = false;

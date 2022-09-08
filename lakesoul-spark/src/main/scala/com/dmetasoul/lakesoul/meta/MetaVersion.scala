@@ -35,7 +35,6 @@ object MetaVersion {
   }
 
   def listNamespaces(): Array[String] = {
-    println("[DEBUG]in com.dmetasoul.lakesoul.meta.MetaVersion.listNamespaces")
     dbManager.listNamespaces.asScala.toArray
   }
 
