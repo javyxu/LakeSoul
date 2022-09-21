@@ -49,10 +49,7 @@ public class LakSoulFileWriter<IN> extends LakesSoulAbstractStreamingWriter<IN, 
   private final Configuration flinkConf;
   private final OutputFileConfig outputFileConfig;
   private final LakeSoulKeyGen keyGen;
-  private transient Set<String> currentNewBuckets;
-  private transient TreeMap<Long, Set<String>> newBuckets;
-  private transient Set<String> committableBuckets;
-  private transient Map<String, Long> inProgressBuckets;
+
   private transient PartitionCommitPredicate partitionCommitPredicate;
 
   public LakSoulFileWriter(long bucketCheckInterval,
@@ -71,25 +68,9 @@ public class LakSoulFileWriter<IN> extends LakesSoulAbstractStreamingWriter<IN, 
     super.initializeState(context);
     this.partitionCommitPredicate =
         PartitionCommitPredicate.create(flinkConf, getUserCodeClassloader(), partitionKeyList);
-    this.currentNewBuckets = new HashSet<>();
-    this.newBuckets = new TreeMap<>();
-    this.committableBuckets = new HashSet<>();
-    this.inProgressBuckets = new HashMap<>();
     ClassLoader userCodeClassLoader = getContainingTask().getUserCodeClassLoader();
     RecordComparator recordComparator = this.keyGen.getComparator().newInstance(userCodeClassLoader);
     this.keyGen.setCompareFunction(recordComparator);
-  }
-
-  @Override
-  protected void partitionCreated(String partition) {
-    this.currentNewBuckets.add(partition);
-    this.inProgressBuckets.putIfAbsent(partition, getProcessingTimeService().getCurrentProcessingTime());
-  }
-
-  @Override
-  protected void partitionInactive(String partition) {
-    this.committableBuckets.add(partition);
-    this.inProgressBuckets.remove(partition);
   }
 
   @Override
