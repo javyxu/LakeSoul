@@ -19,6 +19,7 @@
 
 package org.apache.flink.lakeSoul.test;
 
+import com.dmetasoul.lakesoul.meta.external.mysql.MysqlDBManager;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.source.MySqlSourceBuilder;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -29,19 +30,31 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.util.HashSet;
+
 public class FlinkCDCMultiTableTest {
 
     public static void main(String[] args) throws Exception {
+        String DBName = "test_cdc";
+        String userName = "root";
+        String passWrd = "mysql123";
+        String host = "localhost";
+        int port = 3306;
+
+        MysqlDBManager mysqlDBManager = new MysqlDBManager(DBName, userName, passWrd, host, Integer.toString(port), new HashSet<>());
+        mysqlDBManager.registerLakeSoulNamespace(DBName);
+        mysqlDBManager.listTables().forEach(mysqlDBManager::registerLakeSoulTable);
+
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
         env.enableCheckpointing(3000);
 
         MySqlSourceBuilder<JsonSourceRecord> sourceBuilder = MySqlSource.<JsonSourceRecord>builder()
-                .hostname("localhost")
-                .port(3306)
-                .databaseList("test_cdc") // set captured database
+                .hostname(host)
+                .port(port)
+                .databaseList(DBName) // set captured database
                 .tableList("test_cdc.*") // set captured table
-                .username("root")
-                .password("root");
+                .username(userName)
+                .password(passWrd);
 
         LakeSoulMultiTableSinkStreamBuilder.Context context = new LakeSoulMultiTableSinkStreamBuilder.Context();
         context.env = env;
