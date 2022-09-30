@@ -18,12 +18,9 @@
  */
 package com.dmetasoul.lakesoul.meta.external;
 
-import org.apache.logging.log4j.util.Strings;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DatabaseSchemaedTables {
     private String DBName;

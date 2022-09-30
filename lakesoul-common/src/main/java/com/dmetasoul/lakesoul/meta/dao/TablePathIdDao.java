@@ -218,7 +218,6 @@ public class TablePathIdDao {
     public void clean() {
         Connection conn = null;
         PreparedStatement pstmt = null;
-        ResultSet rs = null;
         String sql = "delete from table_path_id;";
         try {
             conn = DBConnector.getConn();

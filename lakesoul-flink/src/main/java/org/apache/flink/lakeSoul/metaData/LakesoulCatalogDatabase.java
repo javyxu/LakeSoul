@@ -18,11 +18,9 @@
 
 package org.apache.flink.lakeSoul.metaData;
 
-import com.alibaba.fastjson.JSONObject;
 import org.apache.flink.table.catalog.CatalogDatabase;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 

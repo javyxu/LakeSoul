@@ -40,7 +40,6 @@ import java.util.Map;
 
 
 public class BucketStateSerializer<BucketID> implements SimpleVersionedSerializer<BucketState<BucketID>> {
-  private static final int MAGIC_NUMBER = 511069049;
   private final SimpleVersionedSerializer<InProgressFileWriter.InProgressFileRecoverable> inProgressFileRecoverableSerializer;
   private final SimpleVersionedSerializer<InProgressFileWriter.PendingFileRecoverable> pendingFileRecoverableSerializer;
   private final SimpleVersionedSerializer<BucketID> bucketIdSerializer;

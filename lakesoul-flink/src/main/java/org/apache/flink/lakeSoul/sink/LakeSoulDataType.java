@@ -18,7 +18,6 @@
  */
 package org.apache.flink.lakeSoul.sink;
 
-import com.ververica.cdc.debezium.table.RowDataDebeziumDeserializeSchema;
 import io.debezium.relational.TableId;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.RowType;

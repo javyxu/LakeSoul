@@ -19,9 +19,6 @@
 package com.dmetasoul.lakesoul.meta.external.jdbc;
 
 import io.debezium.config.CommonConnectorConfig;
-import io.debezium.data.Bits;
-import io.debezium.data.SpecialValueDecimal;
-import io.debezium.data.Xml;
 import io.debezium.jdbc.JdbcValueConverters;
 import io.debezium.jdbc.TemporalPrecisionMode;
 import io.debezium.relational.Column;
@@ -43,21 +40,9 @@ public class JdbcDataTypeConverter {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ZoneOffset defaultOffset;
-
-    /**
-     * Fallback value for TIMESTAMP WITH TZ is epoch
-     */
-    private final String fallbackTimestampWithTimeZone;
-
-    /**
-     * Fallback value for TIME WITH TZ is 00:00
-     */
-    private final String fallbackTimeWithTimeZone;
     protected final boolean adaptiveTimePrecisionMode;
     protected final boolean adaptiveTimeMicrosecondsPrecisionMode;
     protected final JdbcValueConverters.DecimalMode decimalMode;
-    private final TemporalAdjuster adjuster;
     protected final JdbcValueConverters.BigIntUnsignedMode bigIntUnsignedMode;
     protected final CommonConnectorConfig.BinaryHandlingMode binaryMode;
 
@@ -88,19 +73,17 @@ public class JdbcDataTypeConverter {
      */
     public JdbcDataTypeConverter(JdbcValueConverters.DecimalMode decimalMode, TemporalPrecisionMode temporalPrecisionMode, ZoneOffset defaultOffset,
                                  TemporalAdjuster adjuster, JdbcValueConverters.BigIntUnsignedMode bigIntUnsignedMode, CommonConnectorConfig.BinaryHandlingMode binaryMode) {
-        this.defaultOffset = defaultOffset != null ? defaultOffset : ZoneOffset.UTC;
         this.adaptiveTimePrecisionMode = temporalPrecisionMode.equals(TemporalPrecisionMode.ADAPTIVE);
         this.adaptiveTimeMicrosecondsPrecisionMode = temporalPrecisionMode.equals(TemporalPrecisionMode.ADAPTIVE_TIME_MICROSECONDS);
         this.decimalMode = decimalMode != null ? decimalMode : JdbcValueConverters.DecimalMode.PRECISE;
-        this.adjuster = adjuster;
         this.bigIntUnsignedMode = bigIntUnsignedMode != null ? bigIntUnsignedMode : JdbcValueConverters.BigIntUnsignedMode.PRECISE;
         this.binaryMode = binaryMode != null ? binaryMode : CommonConnectorConfig.BinaryHandlingMode.BYTES;
 
-        this.fallbackTimestampWithTimeZone = ZonedTimestamp.toIsoString(
+        ZonedTimestamp.toIsoString(
                 OffsetDateTime.of(LocalDate.ofEpochDay(0), LocalTime.MIDNIGHT, defaultOffset),
                 defaultOffset,
                 adjuster);
-        this.fallbackTimeWithTimeZone = ZonedTime.toIsoString(
+        ZonedTime.toIsoString(
                 OffsetTime.of(LocalTime.MIDNIGHT, defaultOffset),
                 defaultOffset,
                 adjuster);

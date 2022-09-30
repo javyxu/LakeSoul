@@ -45,25 +45,16 @@ public class LakeSoulKeyGen implements Serializable {
   private final Configuration conf;
   private final String[] recordKeyFields;
   private final String[] partitionPathFields;
-  private final RowDataProjection recordKeyProjection;
-  private final RowDataProjection partitionPathProjection;
-  private RowData.FieldGetter recordKeyFieldGetter;
-  private RowData.FieldGetter partitionPathFieldGetter;
   private final GeneratedRecordComparator comparator;
   private RecordComparator compareFunction;
-  private boolean nonPartitioned;
   private boolean simpleRecordKey = false;
-  private boolean simplePartitionPath = false;
   private final List<String> fieldNames;
-  private List<String> partitionKey;
-  private String simpleRecordKeyType;
   private int[] hashKeyIndex;
   private LogicalType[] hashKeyType;
 
   public LakeSoulKeyGen(RowType rowType, Configuration conf, List<String> partitionKey) {
     this.conf = conf;
     this.recordKeyFields = getRecordKeyFields();
-    this.partitionKey = partitionKey;
     this.partitionPathFields = getPartitionFiled();
     this.fieldNames = rowType.getFieldNames();
     List<LogicalType> fieldTypes = rowType.getChildren();
@@ -71,24 +62,19 @@ public class LakeSoulKeyGen implements Serializable {
       this.simpleRecordKey = true;
       int recordKeyIdx = fieldNames.indexOf(this.recordKeyFields[0]);
       LogicalType logicalType = fieldTypes.get(recordKeyIdx);
-      simpleRecordKeyType = logicalType.toString();
-      this.recordKeyFieldGetter = RowData.createFieldGetter(logicalType, recordKeyIdx);
-      this.recordKeyProjection = null;
+      RowData.createFieldGetter(logicalType, recordKeyIdx);
     } else {
-      this.recordKeyProjection = getProjection(this.recordKeyFields, fieldNames, fieldTypes);
+      getProjection(this.recordKeyFields, fieldNames, fieldTypes);
     }
     this.comparator = createSortComparator(getFieldPositions(this.recordKeyFields, fieldNames), rowType);
     if (this.partitionPathFields.length == 1) {
-      this.simplePartitionPath = true;
       if (this.partitionPathFields[0].equals("")) {
-        this.nonPartitioned = true;
       } else {
         int partitionPathIdx = fieldNames.indexOf(this.partitionPathFields[0]);
-        this.partitionPathFieldGetter = RowData.createFieldGetter(fieldTypes.get(partitionPathIdx), partitionPathIdx);
+        RowData.createFieldGetter(fieldTypes.get(partitionPathIdx), partitionPathIdx);
       }
-      this.partitionPathProjection = null;
     } else {
-      this.partitionPathProjection = getProjection(this.partitionPathFields, fieldNames, fieldTypes);
+      getProjection(this.partitionPathFields, fieldNames, fieldTypes);
     }
     this.hashKeyIndex = getFieldPositions(this.recordKeyFields, fieldNames);
     this.hashKeyType = Arrays.stream(hashKeyIndex).mapToObj(fieldTypes::get).toArray(LogicalType[]::new);

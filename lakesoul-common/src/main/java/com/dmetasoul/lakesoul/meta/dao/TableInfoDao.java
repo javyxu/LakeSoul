@@ -189,7 +189,6 @@ public class TableInfoDao {
     public void clean() {
         Connection conn = null;
         PreparedStatement pstmt = null;
-        ResultSet rs = null;
         String sql = "delete from table_info;";
         try {
             conn = DBConnector.getConn();

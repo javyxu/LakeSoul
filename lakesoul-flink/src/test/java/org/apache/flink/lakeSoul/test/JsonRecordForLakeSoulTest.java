@@ -18,17 +18,9 @@
  */
 package org.apache.flink.lakeSoul.test;
 
-import com.ververica.cdc.connectors.mysql.source.MySqlSource;
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.lakeSoul.sink.LakeSoulDDLSink;
 import org.apache.flink.lakeSoul.sink.LakeSoulDataType;
 import org.apache.flink.lakeSoul.sink.LakeSoulRecordConvert;
-import org.apache.flink.lakeSoul.types.JsonDebeziumDeserializationSchema;
 import org.apache.flink.lakeSoul.types.JsonSourceRecord;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 public class JsonRecordForLakeSoulTest {
     public static void main(String[] args) throws Exception {

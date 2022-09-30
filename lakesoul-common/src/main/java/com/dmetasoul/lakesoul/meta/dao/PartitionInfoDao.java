@@ -261,7 +261,6 @@ public class PartitionInfoDao {
     public void clean() {
         Connection conn = null;
         PreparedStatement pstmt = null;
-        ResultSet rs = null;
         String sql = "delete from partition_info;";
         try {
             conn = DBConnector.getConn();

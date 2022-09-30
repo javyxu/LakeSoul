@@ -3,10 +3,8 @@ package com.dmetasoul.lakesoul.meta.external.mysql;
 import com.alibaba.fastjson.JSONObject;
 import com.dmetasoul.lakesoul.meta.DBManager;
 import com.dmetasoul.lakesoul.meta.entity.DataBaseProperty;
-import com.dmetasoul.lakesoul.meta.entity.Namespace;
 import com.dmetasoul.lakesoul.meta.entity.TableNameId;
 import com.dmetasoul.lakesoul.meta.external.DBConnector;
-import com.dmetasoul.lakesoul.meta.external.DatabaseSchemaedTables;
 import com.dmetasoul.lakesoul.meta.external.ExternalDBManager;
 import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
 import io.debezium.relational.Tables;
@@ -14,7 +12,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.StructType;
 
-import java.net.URI;
 import java.sql.*;
 import java.util.*;
 
@@ -31,7 +28,6 @@ public class MysqlDBManager implements ExternalDBManager {
     private final DBManager lakesoulDBManager;
     private final String lakesoulTablePathPrefix;
     private final String DBName;
-    private HashSet<String> excludeTables;
     private String[] filterTables = new String[]{"sys_config"};
 
     MysqlDataTypeConverter converter;
@@ -46,7 +42,6 @@ public class MysqlDBManager implements ExternalDBManager {
                           HashSet<String> excludeTables,
                           String pathPrefix) {
         this.DBName = DBName;
-        this.excludeTables = excludeTables;
         excludeTables.addAll(Arrays.asList(filterTables));
 
         DataBaseProperty dataBaseProperty = new DataBaseProperty();

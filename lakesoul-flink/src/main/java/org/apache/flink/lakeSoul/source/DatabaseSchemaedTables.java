@@ -24,11 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DatabaseSchemaedTables {
-    private String DBName;
     HashMap<String, Table> tables = new HashMap<>(20);
 
     public DatabaseSchemaedTables(String DBName) {
-        this.DBName = DBName;
     }
 
     public Table addTable(String tableName) {

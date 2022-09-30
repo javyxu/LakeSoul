@@ -50,14 +50,10 @@ public class LakeSoulSortTask extends TableStreamOperator<RowData>
   private transient BinaryExternalSorter sorter;
   private transient StreamRecordCollector<RowData> collector;
   private transient BinaryRowDataSerializer binarySerializer;
-  private HashMap<String, Integer> buckets;
-  private LakeSoulKeyGen keyGen;
-
   public LakeSoulSortTask(
       GeneratedNormalizedKeyComputer gComputer, GeneratedRecordComparator gComparator, LakeSoulKeyGen keyGen) {
     this.gComputer = gComputer;
     this.gComparator = gComparator;
-    this.keyGen = keyGen;
   }
 
 
@@ -65,7 +61,7 @@ public class LakeSoulSortTask extends TableStreamOperator<RowData>
   public void open() throws Exception {
     super.open();
 
-    buckets = new HashMap<>();
+    new HashMap<>();
     ClassLoader cl = getContainingTask().getUserCodeClassLoader();
 
     AbstractRowDataSerializer inputSerializer = (AbstractRowDataSerializer) getOperatorConfig().getTypeSerializerIn1(getUserCodeClassloader());

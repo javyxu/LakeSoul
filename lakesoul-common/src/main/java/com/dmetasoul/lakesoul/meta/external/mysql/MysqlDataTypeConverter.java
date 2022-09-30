@@ -1,11 +1,8 @@
 package com.dmetasoul.lakesoul.meta.external.mysql;
 
 import com.dmetasoul.lakesoul.meta.external.jdbc.JdbcDataTypeConverter;
-import io.debezium.connector.mysql.MySqlConnectorConfig;
 import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
-import io.debezium.data.Json;
 import io.debezium.relational.Column;
-import io.debezium.time.Year;
 import io.debezium.util.Strings;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DecimalType;
@@ -13,7 +10,6 @@ import org.apache.spark.sql.types.DecimalType;
 
 import java.util.List;
 
-import static io.debezium.connector.mysql.MySqlConnectorConfig.BigIntUnsignedHandlingMode.PRECISE;
 import static java.util.regex.Pattern.matches;
 import static org.apache.spark.sql.types.DataTypes.*;
 
@@ -45,11 +41,11 @@ public class MysqlDataTypeConverter extends JdbcDataTypeConverter {
             return IntegerType;
         }
         if (matches(typeName, "ENUM")) {
-            String commaSeparatedOptions = extractEnumAndSetOptionsAsString(column);
+            extractEnumAndSetOptionsAsString(column);
             return StringType;
         }
         if (matches(typeName, "SET")) {
-            String commaSeparatedOptions = extractEnumAndSetOptionsAsString(column);
+            extractEnumAndSetOptionsAsString(column);
             return StringType;
         }
         if (matches(typeName, "SMALLINT UNSIGNED") || matches(typeName, "SMALLINT UNSIGNED ZEROFILL")

@@ -33,8 +33,6 @@ import org.apache.flink.streaming.api.operators.ChainingStrategy;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
-import org.apache.flink.table.data.RowData;
-
 import java.util.*;
 
 public abstract class LakesSoulAbstractStreamingWriter<IN, OUT> extends AbstractStreamOperator<OUT>

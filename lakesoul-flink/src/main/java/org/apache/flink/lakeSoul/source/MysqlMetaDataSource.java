@@ -27,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 
 public class MysqlMetaDataSource implements JdbcMetaDataSource {
 

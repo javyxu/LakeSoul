@@ -21,7 +21,6 @@ package org.apache.flink.lakeSoul.sink;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.dmetasoul.lakesoul.meta.DBManager;
 import com.dmetasoul.lakesoul.meta.external.mysql.MysqlDBManager;
 import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -33,15 +32,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import static java.util.List.of;
-
 public class LakeSoulDDLSink extends RichSinkFunction<JsonSourceRecord> {
     private final String ddlField = "ddl";
     private final String historyField = "historyRecord";
     private final String source = "source";
     private final String table = "table";
-    private final String dbName = "db";
-    private DBManager lakesoulDbManager;
     private MysqlDBManager mysqlDbManager;
 
     public static class ConfKey {
@@ -62,9 +57,7 @@ public class LakeSoulDDLSink extends RichSinkFunction<JsonSourceRecord> {
         String ddlval = jso.getString(ddlField).toLowerCase();
         Struct sourceItem = (Struct)val.get(source);
         String tablename=sourceItem.getString(table);
-        String dataBasename=sourceItem.getString(dbName);
         ParameterTool pt = (ParameterTool) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
-        lakesoulDbManager = new DBManager();
         List<String> excludeTablesList = Arrays.asList(pt.get(ConfKey.DB_EXCLUDE_TABLE, "").split(","));
         HashSet<String> excludeTables = new HashSet<>(excludeTablesList);
         mysqlDbManager = new MysqlDBManager(pt.get(ConfKey.DB_NAME),

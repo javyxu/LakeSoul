@@ -18,23 +18,18 @@
  */
 package org.apache.flink.lakeSoul.test;
 
-import com.dmetasoul.lakesoul.meta.entity.Namespace;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.flink.table.catalog.Catalog;
-import org.apache.flink.util.ArrayUtils;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import com.dmetasoul.lakesoul.meta.entity.Namespace;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 @RunWith(Parameterized.class)
 public class LakeSoulCatalogTestBase extends LakeSoulFlinkTestBase {

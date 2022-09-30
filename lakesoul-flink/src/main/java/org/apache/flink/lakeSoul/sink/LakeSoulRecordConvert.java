@@ -20,12 +20,8 @@ package org.apache.flink.lakeSoul.sink;
 
 
 import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.data.*;
-import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.source.SourceRecord;
-import com.ververica.cdc.debezium.table.DeserializationRuntimeConverter;
 import com.ververica.cdc.debezium.utils.TemporalConversions;
 import io.debezium.data.Envelope;
-import io.debezium.data.SpecialValueDecimal;
-import io.debezium.data.VariableScaleDecimal;
 import io.debezium.time.*;
 import io.debezium.time.ZonedTime;
 import io.debezium.time.ZonedTimestamp;
@@ -34,7 +30,6 @@ import io.debezium.time.Timestamp;
 import org.apache.flink.lakeSoul.types.JsonSourceRecord;
 import org.apache.flink.lakeSoul.types.SourceRecordJsonSerde;
 import org.apache.flink.table.data.*;
-import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.*;
 import org.apache.flink.types.RowKind;
 
@@ -171,15 +166,11 @@ public class LakeSoulRecordConvert {
         for (int i = 0; i < arity; i++) {
             Field field = fieldNames.get(i);
             String fieldName = field.name();
-            if (field == null) {
-                row.setField(i, null);
-            } else {
-                Object fieldValue = struct.getWithoutDefault(fieldName);
-                Schema fieldSchema = schema.field(fieldName).schema();
-                Object convertedField =
-                        convertSqlField(fieldValue, fieldSchema, serverTimeZone);
-                row.setField(i, convertedField);
-            }
+            Object fieldValue = struct.getWithoutDefault(fieldName);
+            Schema fieldSchema = schema.field(fieldName).schema();
+            Object convertedField =
+                    convertSqlField(fieldValue, fieldSchema, serverTimeZone);
+            row.setField(i, convertedField);
         }
         return row;
     }

@@ -53,13 +53,11 @@ import org.apache.flink.table.expressions.Expression;
 import static org.apache.flink.lakeSoul.tool.LakeSoulSinkOptions.CDC_CHANGE_COLUMN;
 import static org.apache.flink.lakeSoul.tool.LakeSoulSinkOptions.RECORD_KEY_NAME;
 import static org.apache.flink.lakeSoul.tool.LakeSoulSinkOptions.USE_CDC;
-import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 public class LakeSoulCatalog implements Catalog {
 
   public static final String CATALOG_NAME = "lakesoul";
-  private static final String LAKE_SOUL_DATA_BASE_NAME = "test_lakesoul_meta";
   private static final String TABLE_PATH = "path";
   private static final String TABLE_ID_PREFIX = "table_";
   private DBManager dbManager;
@@ -282,8 +280,8 @@ public class LakeSoulCatalog implements Catalog {
       throw new PartitionNotExistException(CATALOG_NAME, tablePath, catalogPartitionSpec);
     }
     String tableName = tablePath.getFullName();
-    String rangeValue = FlinkUtil.getRangeValue(catalogPartitionSpec);
-    TableInfo tableInfo = dbManager.getTableInfo(tableName);
+    FlinkUtil.getRangeValue(catalogPartitionSpec);
+    dbManager.getTableInfo(tableName);
      }
 
   @Override

@@ -121,7 +121,6 @@ public class TableNameIdDao {
     public void clean() {
         Connection conn = null;
         PreparedStatement pstmt = null;
-        ResultSet rs = null;
         String sql = "delete from table_name_id;";
         try {
             conn = DBConnector.getConn();

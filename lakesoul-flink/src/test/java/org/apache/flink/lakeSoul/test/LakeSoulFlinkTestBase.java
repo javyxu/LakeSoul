@@ -20,13 +20,11 @@ package org.apache.flink.lakeSoul.test;
 
 import java.util.List;
 import com.dmetasoul.lakesoul.meta.DBManager;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.flink.lakeSoul.metaData.LakeSoulCatalog;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.api.TableResult;
-import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.test.util.TestBaseUtils;
 import org.apache.flink.types.Row;
 import org.apache.flink.util.CloseableIterator;
