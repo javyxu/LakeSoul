@@ -27,13 +27,13 @@ RUN apt-get install -y openjdk-11-jdk maven && apt-get clean
 COPY . /opt/LakeSoul
 COPY docker/settings.xml /root/.m2/settings.xml
 
-RUN --mount=type=cache,target=/root/.m2/repository mvn package -f /opt/LakeSoul/pom.xml -Dmaven.test.skip=true -DskipTests
+RUN mvn clean -f /opt/LakeSoul/pom.xml
+RUN mvn install -f /opt/LakeSoul/pom.xml -Dmaven.test.skip=true -DskipTests
 RUN mvn -f /opt/LakeSoul/pom.xml dependency:copy-dependencies -DoutputDirectory=/opt/LakeSoul/jars -DincludeScope=runtime -DexcludeGroupIds=org.apache.parquet,org.apache.flink,org.scalatest,org.scala-lang,org.apache.livy,junit,org.slf4j,org.apache.logging.log4j,io.netty,org.apache.commons,org.xerial.snappy,com.codahale.metrics
 
 FROM env as release
-RUN apt-get install -y tini python3.8 python3-setuptools ca-certificates openjdk-11-jre && apt-get clean
+RUN apt-get install -y tini python3.8 python3-pip python3-setuptools ca-certificates openjdk-11-jre && apt-get clean
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 30
-RUN python -m easy_install install pip
 RUN python -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 RUN python -m pip install https://ks3-cn-beijing.ksyuncs.com/dmetasoul-bucket/releases/spark/pyspark-3.1.2.f8301b97d4-py2.py3-none-any.whl --no-cache-dir
 RUN python -m pip install pyarrow pandas --no-cache-dir
@@ -44,12 +44,11 @@ ENV PATH=$SPARK_HOME/bin:$PATH
 ENV JAVA_HOME=/usr
 
 RUN rm -f $SPARK_HOME/jars/HikariCP*
-COPY --from=build /opt/LakeSoul/jars/*.jar $SPARK_HOME/jars
-COPY --from=build /opt/LakeSoul/target/lakesoul-1.1.0.jar $SPARK_HOME/jars
+COPY --from=build /opt/LakeSoul/jars/*.jar $SPARK_HOME/jars/
+COPY --from=build /opt/LakeSoul/target/lakesoul-*.jar $SPARK_HOME/jars/
+COPY --from=build /opt/LakeSoul/docker/entrypoint.sh /opt/entrypoint.sh
+COPY --from=build /opt/LakeSoul/docker/decom.sh /opt/decom.sh
 RUN mkdir -p /opt/spark/work-dir
-RUN apt-get install -y wget && apt-get clean
-RUN wget https://raw.githubusercontent.com/apache/spark/v3.1.2/resource-managers/kubernetes/docker/src/main/dockerfiles/spark/entrypoint.sh -O /opt/entrypoint.sh
-RUN wget https://raw.githubusercontent.com/apache/spark/v3.1.2/resource-managers/kubernetes/docker/src/main/dockerfiles/spark/decom.sh -O /opt/decom.sh
 WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir
 RUN chmod a+x /opt/decom.sh
