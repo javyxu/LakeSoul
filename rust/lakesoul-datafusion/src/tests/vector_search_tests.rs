@@ -262,10 +262,14 @@ fn vector_configs() -> Vec<crate::vector_index::VectorIndexTableConfig> {
         rotator_type: "FhtKac".to_string(),
         seed: 42,
         use_faster_config: true,
+        rebuild_mode: "auto".to_string(),
+        max_delta_ratio: 1.0,
     }]
 }
 
-/// Assert that every hash bucket of the table has a vector index.
+/// Assert that the table's vector index is committed: the
+/// `_vector_index/vec` tree contains at least one `LATEST` manifest (each
+/// built shard directory is sealed with one).
 fn assert_vector_index_built(table_name: &str) {
     let root = std::env::current_dir()
         .unwrap()
@@ -273,8 +277,51 @@ fn assert_vector_index_built(table_name: &str) {
         .join(table_name);
     let index_dir = root.join("_vector_index").join("vec");
     assert!(index_dir.exists(), "no _vector_index dir at {index_dir:?}");
-    let bucket_count = std::fs::read_dir(&index_dir).unwrap().count();
-    assert!(bucket_count >= 1, "expected >= 1 index shard dir");
+    let mut latest_count = 0usize;
+    let mut stack = vec![index_dir.clone()];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.file_name().map(|n| n == "LATEST").unwrap_or(false) {
+                latest_count += 1;
+            }
+        }
+    }
+    assert!(
+        latest_count >= 1,
+        "expected a committed LATEST manifest under {index_dir:?}"
+    );
+}
+
+/// Reads the first data parquet file of `table_name` and returns the
+/// DataType of its `vec` column (to assert what was actually stored).
+fn stored_vec_column_type(table_name: &str) -> DataType {
+    let root = std::env::current_dir()
+        .unwrap()
+        .join("default")
+        .join(table_name);
+    let mut found = None;
+    for entry in std::fs::read_dir(&root).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().map(|e| e == "parquet").unwrap_or(false) {
+            use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
+            let file = std::fs::File::open(&path).unwrap();
+            let reader = ParquetRecordBatchReaderBuilder::try_new(file)
+                .unwrap()
+                .build()
+                .unwrap();
+            for batch in reader.take(1) {
+                let batch = batch.unwrap();
+                if let Some(field) = batch.schema().column_with_name("vec") {
+                    found = Some(field.1.data_type().clone());
+                    break;
+                }
+            }
+        }
+    }
+    found.expect("no data parquet file found for table")
 }
 
 async fn explain_plan(
@@ -594,12 +641,18 @@ async fn sql_create_table_declares_vector_index_via_option() {
 
     // A `FLOAT[]` column validates against the vector-index rules (List of
     // floats); the option is stored as the table property.
+    let location = std::env::current_dir()
+        .unwrap()
+        .join("default")
+        .join(table_name)
+        .display()
+        .to_string();
     let create_sql = format!(
         "CREATE EXTERNAL TABLE \"LAKESOUL\".default.{table_name} (
             id BIGINT NOT NULL PRIMARY KEY,
             vec FLOAT[] NOT NULL
          ) STORED AS LAKESOUL \
-         LOCATION 'default/{table_name}' \
+         LOCATION '{location}' \
          OPTIONS ('vector_index_columns' '{vector_option}', 'hash_bucket_num' '4')"
     );
     ctx.sql(&create_sql).await.unwrap().collect().await.unwrap();
@@ -635,5 +688,615 @@ async fn sql_create_table_declares_vector_index_via_option() {
     assert!(
         err.to_string().contains("invalid vector_index_columns"),
         "expected an option validation error, got: {err}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn sql_full_chain_insert_auto_builds_index() {
+    // Full SQL chain: CREATE EXTERNAL TABLE (declaring the vector index
+    // through OPTIONS) -> INSERT INTO -> the auto index build must seal a
+    // LATEST manifest, EXPLAIN must pick LakeSoulVectorSearchExec, and the
+    // search must return rows.  `FLOAT[]` maps to List<Float32>, so this
+    // exercises the native Float32 index path.
+    let client = Arc::new(MetaDataClient::from_env().await.unwrap());
+    let table_name = "vec_sql_chain_f32";
+    let _ = client.drop_table(table_name, "default").await;
+    clean_table_dir(table_name);
+    let ctx =
+        crate::create_lakesoul_session_ctx(client.clone(), &default_args()).unwrap();
+
+    let cfg = serde_json::json!([{"column": "vec", "dim": 8, "nlist": 4, "total_bits": 7, "metric": "L2"}])
+        .to_string();
+    let location = std::env::current_dir()
+        .unwrap()
+        .join("default")
+        .join(table_name)
+        .display()
+        .to_string();
+    let create_sql = format!(
+        "CREATE EXTERNAL TABLE \"LAKESOUL\".default.{table_name} (
+            id BIGINT NOT NULL PRIMARY KEY,
+            vec FLOAT[] NOT NULL
+         ) STORED AS LAKESOUL LOCATION '{location}'
+         OPTIONS ('vector_index_columns' '{cfg}', 'hash_bucket_num' '4')"
+    );
+    ctx.sql(&create_sql).await.unwrap().collect().await.unwrap();
+
+    let insert_sql = format!(
+        "INSERT INTO \"LAKESOUL\".default.{table_name}
+         SELECT CAST(g.value AS BIGINT),
+                ARRAY[sin(g.value), cos(g.value), g.value*0.1, 0.5, -0.5, 1.0, -1.0, 0.0]
+         FROM generate_series(0, 99) AS g(value)"
+    );
+    ctx.sql(&insert_sql).await.unwrap().collect().await.unwrap();
+
+    // The index must be committed (a LATEST manifest per shard), and the
+    // data column stored as Float32 lists (SQL FLOAT -> Float32).
+    assert_vector_index_built(table_name);
+    let stored = stored_vec_column_type(table_name);
+    assert!(
+        matches!(&stored, DataType::List(f)
+            if matches!(f.data_type(), DataType::Float32)),
+        "FLOAT[] column should be stored as List<Float32>, got {stored:?}"
+    );
+
+    // EXPLAIN confirms the query is served by the vector-index scan.
+    let query = [0.1f32, -0.2, 0.3, 0.4, -0.5, 0.6, 0.7, 0.8];
+    let q = query
+        .iter()
+        .map(|v| v.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let select_sql = format!(
+        "select id from \"LAKESOUL\".default.{table_name} \
+         order by array_distance(vec, ARRAY[{q}]) limit 5"
+    );
+    let explain = explain_plan(&ctx, &format!("EXPLAIN VERBOSE {select_sql}")).await;
+    assert!(
+        explain.contains("LakeSoulVectorSearchExec"),
+        "SQL insert path must be served by the vector-index exec:\n{explain}"
+    );
+
+    // And the query returns results from the inserted rows.
+    let df = ctx.sql(&select_sql).await.unwrap();
+    let batches = df.collect().await.unwrap();
+    let mut ids = Vec::new();
+    for batch in &batches {
+        let arr = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+            .unwrap();
+        ids.extend(arr.values().iter().copied());
+    }
+    assert_eq!(ids.len(), 5, "SQL insert search returned: {ids:?}");
+    assert!(
+        ids.iter().all(|id| (0..100).contains(id)),
+        "ids must come from the inserted batch: {ids:?}"
+    );
+
+    // An incremental SQL insert is auto-indexed too (delta build).
+    let insert2_sql = format!(
+        "INSERT INTO \"LAKESOUL\".default.{table_name}
+         SELECT CAST(100 + g.value AS BIGINT),
+                ARRAY[sin(g.value), cos(g.value), g.value*0.2, -0.5, 0.5, 0.0, 1.0, -1.0]
+         FROM generate_series(0, 99) AS g(value)"
+    );
+    ctx.sql(&insert2_sql)
+        .await
+        .unwrap()
+        .collect()
+        .await
+        .unwrap();
+    let probe: Vec<f32> = [
+        (0f64).sin() as f32,
+        (50f64).cos() as f32,
+        (50f64 * 0.2) as f32,
+        -0.5,
+        0.5,
+        0.0,
+        1.0,
+        -1.0,
+    ]
+    .to_vec();
+    let pq = probe
+        .iter()
+        .map(|v| v.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let incremental_sql = format!(
+        "select id from \"LAKESOUL\".default.{table_name} \
+         order by array_distance(vec, ARRAY[{pq}]) limit 5"
+    );
+    let df = ctx.sql(&incremental_sql).await.unwrap();
+    let batches = df.collect().await.unwrap();
+    let mut incremental_ids = Vec::new();
+    for batch in &batches {
+        let arr = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+            .unwrap();
+        incremental_ids.extend(arr.values().iter().copied());
+    }
+    assert!(
+        incremental_ids.contains(&150),
+        "incremental SQL insert must be searchable: {incremental_ids:?}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn sql_insert_float64_vectors_converted_to_f32_before_indexing() {
+    // SQL `DOUBLE[]` maps to List<Float64>: the rows stay Float64 on disk,
+    // and the auto index build converts them to Float32 (the index and its
+    // search math are float32). Without the conversion this write fails.
+    let client = Arc::new(MetaDataClient::from_env().await.unwrap());
+    let table_name = "vec_sql_chain_f64";
+    let _ = client.drop_table(table_name, "default").await;
+    clean_table_dir(table_name);
+    let ctx =
+        crate::create_lakesoul_session_ctx(client.clone(), &default_args()).unwrap();
+
+    let cfg = serde_json::json!([{"column": "vec", "dim": 8, "nlist": 4, "total_bits": 7, "metric": "L2"}])
+        .to_string();
+    let location = std::env::current_dir()
+        .unwrap()
+        .join("default")
+        .join(table_name)
+        .display()
+        .to_string();
+    let create_sql = format!(
+        "CREATE EXTERNAL TABLE \"LAKESOUL\".default.{table_name} (
+            id BIGINT NOT NULL PRIMARY KEY,
+            vec DOUBLE[] NOT NULL
+         ) STORED AS LAKESOUL LOCATION '{location}'
+         OPTIONS ('vector_index_columns' '{cfg}', 'hash_bucket_num' '4')"
+    );
+    ctx.sql(&create_sql).await.unwrap().collect().await.unwrap();
+
+    let insert_sql = format!(
+        "INSERT INTO \"LAKESOUL\".default.{table_name}
+         SELECT CAST(g.value AS BIGINT),
+                ARRAY[sin(g.value), cos(g.value), g.value*0.1, 0.5, -0.5, 1.0, -1.0, 0.0]
+         FROM generate_series(0, 99) AS g(value)"
+    );
+    ctx.sql(&insert_sql).await.unwrap().collect().await.unwrap();
+
+    // Data stays Float64 on disk; the index build converted it to f32.
+    let stored = stored_vec_column_type(table_name);
+    assert!(
+        matches!(&stored, DataType::List(f)
+            if matches!(f.data_type(), DataType::Float64)),
+        "DOUBLE[] column should be stored as List<Float64>, got {stored:?}"
+    );
+    assert_vector_index_built(table_name);
+
+    let query = [0.1f32, -0.2, 0.3, 0.4, -0.5, 0.6, 0.7, 0.8];
+    let q = query
+        .iter()
+        .map(|v| v.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let select_sql = format!(
+        "select id from \"LAKESOUL\".default.{table_name} \
+         order by array_distance(vec, ARRAY[{q}]) limit 5"
+    );
+    let explain = explain_plan(&ctx, &format!("EXPLAIN VERBOSE {select_sql}")).await;
+    assert!(
+        explain.contains("LakeSoulVectorSearchExec"),
+        "Float64 insert path must be served by the vector-index exec:\n{explain}"
+    );
+
+    let df = ctx.sql(&select_sql).await.unwrap();
+    let batches = df.collect().await.unwrap();
+    let mut ids = Vec::new();
+    for batch in &batches {
+        let arr = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+            .unwrap();
+        ids.extend(arr.values().iter().copied());
+    }
+    assert_eq!(ids.len(), 5, "Float64 insert search returned: {ids:?}");
+}
+
+/// Read the `generation` field of every LATEST manifest under the table's
+/// `_vector_index` tree.
+fn latest_generations(table_name: &str) -> Vec<u64> {
+    let root = std::env::current_dir()
+        .unwrap()
+        .join("default")
+        .join(table_name);
+    let mut out = Vec::new();
+    let mut stack = vec![root.join("_vector_index")];
+    while let Some(dir) = stack.pop() {
+        if !dir.exists() {
+            continue;
+        }
+        for entry in std::fs::read_dir(&dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.file_name().map(|n| n == "LATEST").unwrap_or(false) {
+                let text = std::fs::read_to_string(&path).unwrap();
+                let generation = text.split(':').next().unwrap().parse::<u64>().unwrap();
+                out.push(generation);
+            }
+        }
+    }
+    out.sort_unstable();
+    out
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn incremental_writes_auto_rebuild_when_delta_ratio_exceeded() {
+    use crate::catalog::create_table_with_vector_index;
+
+    let client = Arc::new(MetaDataClient::from_env().await.unwrap());
+    let table_name = "vec_auto_rebuild_drift";
+    let _ = client.drop_table(table_name, "default").await;
+    clean_table_dir(table_name);
+
+    // Aggressive ratio: two incremental writes of ~10% drift already
+    // exceed it, so the third write must trigger a full rebuild.
+    let mut configs = vector_configs();
+    configs[0].rebuild_mode = "auto".to_string();
+    configs[0].max_delta_ratio = 0.05;
+    let builder = LakeSoulIOConfigBuilder::new()
+        .with_schema(vector_schema())
+        .with_primary_keys(vec!["id".to_string()])
+        .with_hash_bucket_num("4");
+    create_table_with_vector_index(client.clone(), table_name, builder.build(), &configs)
+        .await
+        .unwrap();
+
+    // w1: fresh build (100 rows).
+    let mut id = 0u64;
+    let mut write = |n: usize, ctx: &mut Vec<Vec<f32>>| {
+        let vectors = random_vectors(n);
+        ctx.extend(vectors.iter().cloned());
+        let ids: Vec<u64> = (id..id + n as u64).collect();
+        id += n as u64;
+        let batch = make_batch(&ids, &vectors);
+        let table = crate::lakesoul_table::LakeSoulTable::for_name(table_name);
+        Box::pin(async move { table.await.unwrap().execute_upsert(batch).await.unwrap() })
+    };
+    let mut stored = Vec::new();
+    write(100, &mut stored).await;
+    assert!(
+        latest_generations(table_name).iter().all(|g| *g == 1),
+        "fresh build publishes generation 1: {:?}",
+        latest_generations(table_name)
+    );
+
+    // w2: 10 more rows (10% drift vs base=100) — still incremental (the
+    // ratio is only checked on the *next* write), generation stays at 1.
+    write(10, &mut stored).await;
+    write(10, &mut stored).await;
+    let gens = latest_generations(table_name);
+    assert!(
+        gens.iter().any(|g| *g >= 2),
+        "drift past max_delta_ratio must rebuild (new generation): {gens:?}"
+    );
+
+    // The rebuilt index still serves searches, including late rows.
+    let probe = &stored[115];
+    let q = probe
+        .iter()
+        .map(|v| v.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let sql = format!(
+        "select id from \"LAKESOUL\".default.{table_name} \
+         order by array_distance(vec, ARRAY[{q}]) limit 5"
+    );
+    let ctx = crate::create_lakesoul_session_ctx(client, &default_args()).unwrap();
+    let batches = ctx.sql(&sql).await.unwrap().collect().await.unwrap();
+    let mut ids_result = Vec::new();
+    for batch in &batches {
+        let arr = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::UInt64Array>()
+            .unwrap();
+        ids_result.extend(arr.values().iter().copied());
+    }
+    assert!(
+        ids_result.contains(&115),
+        "rebuilt index must find drifted rows: {ids_result:?}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn rebuild_mode_none_never_rebuilds() {
+    use crate::catalog::create_table_with_vector_index;
+
+    let client = Arc::new(MetaDataClient::from_env().await.unwrap());
+    let table_name = "vec_no_auto_rebuild";
+    let _ = client.drop_table(table_name, "default").await;
+    clean_table_dir(table_name);
+
+    let mut configs = vector_configs();
+    configs[0].rebuild_mode = "none".to_string();
+    let builder = LakeSoulIOConfigBuilder::new()
+        .with_schema(vector_schema())
+        .with_primary_keys(vec!["id".to_string()])
+        .with_hash_bucket_num("4");
+    create_table_with_vector_index(client.clone(), table_name, builder.build(), &configs)
+        .await
+        .unwrap();
+
+    let write = |n: u64| {
+        let vectors = random_vectors(n as usize);
+        let ids: Vec<u64> = (0..n).collect();
+        let batch = make_batch(&ids, &vectors);
+        let table = crate::lakesoul_table::LakeSoulTable::for_name(table_name);
+        Box::pin(async move { table.await.unwrap().execute_upsert(batch).await.unwrap() })
+    };
+
+    // A whole sequence of equal-sized writes must never bump the
+    // generation when rebuild_mode is "none".
+    write(50).await;
+    write(50).await;
+    write(50).await;
+    write(50).await;
+    let gens = latest_generations(table_name);
+    assert!(
+        gens.iter().all(|g| *g == 1),
+        "rebuild_mode 'none' must never rebuild: {gens:?}"
+    );
+    let _ = client;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn manual_rebuild_vector_index_rebuilds_all_shards() {
+    use crate::catalog::create_table_with_vector_index;
+
+    let client = Arc::new(MetaDataClient::from_env().await.unwrap());
+    let table_name = "vec_manual_rebuild";
+    let _ = client.drop_table(table_name, "default").await;
+    clean_table_dir(table_name);
+
+    // Disable auto rebuild so the manual call is the only way generations
+    // bump.
+    let mut configs = vector_configs();
+    configs[0].rebuild_mode = "none".to_string();
+    let builder = LakeSoulIOConfigBuilder::new()
+        .with_schema(vector_schema())
+        .with_primary_keys(vec!["id".to_string()])
+        .with_hash_bucket_num("4");
+    create_table_with_vector_index(client.clone(), table_name, builder.build(), &configs)
+        .await
+        .unwrap();
+
+    let table = crate::lakesoul_table::LakeSoulTable::for_name(table_name)
+        .await
+        .unwrap();
+    let mut offset = 0u64;
+    for _ in 0..4 {
+        let vectors = random_vectors(50);
+        let ids: Vec<u64> = (offset..offset + 50).collect();
+        offset += 50;
+        let batch = make_batch(&ids, &vectors);
+        table.execute_upsert(batch).await.unwrap();
+    }
+    assert!(
+        latest_generations(table_name).iter().all(|g| *g == 1),
+        "no auto rebuild expected: {:?}",
+        latest_generations(table_name)
+    );
+
+    let rebuilt = table.rebuild_vector_index().await.unwrap();
+    assert!(rebuilt >= 1, "at least one shard rebuilt, got {rebuilt}");
+    assert!(
+        latest_generations(table_name).iter().any(|g| *g >= 2),
+        "manual rebuild must publish a new generation: {:?}",
+        latest_generations(table_name)
+    );
+
+    // Search still works and reaches late rows.
+    let vectors = random_vectors(1);
+    let q = vectors[0]
+        .iter()
+        .map(|v| v.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let sql = format!(
+        "select id from \"LAKESOUL\".default.{table_name} \
+         order by array_distance(vec, ARRAY[{q}]) limit 5"
+    );
+    let ctx = crate::create_lakesoul_session_ctx(client, &default_args()).unwrap();
+    let batches = ctx.sql(&sql).await.unwrap().collect().await.unwrap();
+    let mut rows = 0usize;
+    for batch in &batches {
+        rows += batch.num_rows();
+    }
+    assert_eq!(rows, 5);
+}
+
+/// Vectors concentrated near `per_group` evenly-distributed anchor points
+/// (with small noise) so a table write spreads ~evenly across its clusters.
+fn clustered_vectors(
+    anchors: &[[f32; DIM]],
+    per_group: usize,
+    noise: f32,
+    rng: &mut rand::rngs::StdRng,
+) -> Vec<Vec<f32>> {
+    use rand::Rng;
+    let mut out = Vec::new();
+    for anchor in anchors {
+        for _ in 0..per_group {
+            let v: Vec<f32> = anchor
+                .iter()
+                .map(|x| x + (rng.r#gen::<f32>() - 0.5) * noise)
+                .collect();
+            out.push(v);
+        }
+    }
+    out
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn cluster_skew_triggers_rebuild_even_when_shard_ratio_is_low() {
+    use crate::catalog::create_table_with_vector_index;
+    use rand::SeedableRng;
+
+    let client = Arc::new(MetaDataClient::from_env().await.unwrap());
+    let table_name = "vec_cluster_skew_rebuild";
+    let _ = client.drop_table(table_name, "default").await;
+    clean_table_dir(table_name);
+
+    // Single hash bucket, so one shard holds the whole table and each of
+    // the 4 clusters has a meaningful base size (~40 vectors).
+    let builder = LakeSoulIOConfigBuilder::new()
+        .with_schema(vector_schema())
+        .with_primary_keys(vec!["id".to_string()])
+        .with_hash_bucket_num("1");
+    create_table_with_vector_index(
+        client.clone(),
+        table_name,
+        builder.build(),
+        &vector_configs(),
+    )
+    .await
+    .unwrap();
+
+    let mut rng = rand::rngs::StdRng::seed_from_u64(99);
+    let anchors: [[f32; DIM]; 4] = [
+        [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4],
+        [-0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4],
+        [0.4, -0.4, 0.4, -0.4, 0.4, -0.4, 0.4, -0.4],
+        [-0.4, 0.4, -0.4, 0.4, -0.4, 0.4, -0.4, 0.4],
+    ];
+    let mut next_id = 0u64;
+    let upsert = |vectors: Vec<Vec<f32>>, start_id: u64| {
+        let ids: Vec<u64> = (start_id..start_id + vectors.len() as u64).collect();
+        let batch = make_batch(&ids, &vectors);
+        let table = crate::lakesoul_table::LakeSoulTable::for_name(table_name);
+        Box::pin(async move { table.await.unwrap().execute_upsert(batch).await.unwrap() })
+    };
+
+    // w1: 160 vectors spread evenly over the 4 anchors (40 per cluster).
+    upsert(clustered_vectors(&anchors, 40, 0.05, &mut rng), next_id).await;
+    next_id = 160;
+    assert!(
+        latest_generations(table_name).iter().all(|g| *g == 1),
+        "fresh build publishes generation 1: {:?}",
+        latest_generations(table_name)
+    );
+
+    // w2 + w3: 40 evenly-spread vectors each (10 per cluster, cumulative
+    // per-cluster delta 20/40 = 0.5 < 1.0) — still incremental.
+    for _ in 0..2 {
+        upsert(clustered_vectors(&anchors, 10, 0.05, &mut rng), next_id).await;
+        next_id += 40;
+    }
+    assert!(
+        latest_generations(table_name).iter().all(|g| *g == 1),
+        "mild uniform growth must not rebuild: {:?}",
+        latest_generations(table_name)
+    );
+
+    // w4: 60 copies of anchor[0] all land in one cluster, taking its
+    // cumulative delta to 80 vs ~40 base (> 1.0) while the shard-wide
+    // ratio is (80 + 80) / 160 = 1.0 — exactly at (not above) the old
+    // shard threshold.  The rebuild decision runs on the *next* write.
+    upsert(vec![anchors[0].to_vec(); 60], next_id).await;
+    next_id += 60;
+    assert!(
+        latest_generations(table_name).iter().all(|g| *g == 1),
+        "drift becomes visible on the write after the skewed flush: {:?}",
+        latest_generations(table_name)
+    );
+
+    // w5: a tiny write.  Pre-write, one cluster has ~80 delta vs ~40 base
+    // (ratio > 1.0) while the shard ratio is still 1.0: the per-cluster
+    // rule rebuilds, the old shard-level (>1.0) rule would not.
+    upsert(clustered_vectors(&anchors[..1], 2, 0.05, &mut rng), next_id).await;
+    let gens = latest_generations(table_name);
+    assert!(
+        gens.iter().any(|g| *g >= 2),
+        "skewed cluster growth must trigger a rebuild: {gens:?}"
+    );
+
+    // The rebuilt index serves the skewed rows.
+    let probe = anchors[0];
+    let q = probe
+        .iter()
+        .map(|v| v.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let sql = format!(
+        "select id from \"LAKESOUL\".default.{table_name} \
+         order by array_distance(vec, ARRAY[{q}]) limit 10"
+    );
+    let ctx = crate::create_lakesoul_session_ctx(client, &default_args()).unwrap();
+    let batches = ctx.sql(&sql).await.unwrap().collect().await.unwrap();
+    let mut ids_result = Vec::new();
+    for batch in &batches {
+        let arr = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::UInt64Array>()
+            .unwrap();
+        ids_result.extend(arr.values().iter().copied());
+    }
+    assert!(
+        ids_result.iter().any(|id| *id >= 240),
+        "rebuilt index must find the skewed cluster's rows: {ids_result:?}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn uniform_growth_does_not_trigger_per_cluster_rebuild_before_ratio() {
+    use crate::catalog::create_table_with_vector_index;
+    use rand::SeedableRng;
+
+    let client = Arc::new(MetaDataClient::from_env().await.unwrap());
+    let table_name = "vec_cluster_uniform_no_rebuild";
+    let _ = client.drop_table(table_name, "default").await;
+    clean_table_dir(table_name);
+
+    let builder = LakeSoulIOConfigBuilder::new()
+        .with_schema(vector_schema())
+        .with_primary_keys(vec!["id".to_string()])
+        .with_hash_bucket_num("1");
+    create_table_with_vector_index(
+        client.clone(),
+        table_name,
+        builder.build(),
+        &vector_configs(),
+    )
+    .await
+    .unwrap();
+
+    let mut rng = rand::rngs::StdRng::seed_from_u64(7);
+    let anchors: [[f32; DIM]; 4] = [
+        [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4],
+        [-0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4, -0.4],
+        [0.4, -0.4, 0.4, -0.4, 0.4, -0.4, 0.4, -0.4],
+        [-0.4, 0.4, -0.4, 0.4, -0.4, 0.4, -0.4, 0.4],
+    ];
+    let mut next_id = 0u64;
+    let upsert = |vectors: Vec<Vec<f32>>, start_id: u64| {
+        let ids: Vec<u64> = (start_id..start_id + vectors.len() as u64).collect();
+        let batch = make_batch(&ids, &vectors);
+        let table = crate::lakesoul_table::LakeSoulTable::for_name(table_name);
+        Box::pin(async move { table.await.unwrap().execute_upsert(batch).await.unwrap() })
+    };
+
+    // Base 160, then three even writes of 40 (10 per cluster each):
+    // cumulative per-cluster delta stays 30 vs base ~40 (< 1.0).
+    upsert(clustered_vectors(&anchors, 40, 0.05, &mut rng), next_id).await;
+    next_id = 160;
+    for _ in 0..3 {
+        upsert(clustered_vectors(&anchors, 10, 0.05, &mut rng), next_id).await;
+        next_id += 40;
+    }
+    let gens = latest_generations(table_name);
+    assert!(
+        gens.iter().all(|g| *g == 1),
+        "even growth below the per-cluster ratio must never rebuild: {gens:?}"
     );
 }
